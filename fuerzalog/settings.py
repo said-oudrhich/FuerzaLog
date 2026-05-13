@@ -4,7 +4,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-uyngw&xm5alwx7^4uv2@+($ggge41#8$uqub+ed=t+f4$y+*d@'
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['saiid14.pythonanywhere.com', 'localhost', '127.0.0.1']
 
@@ -72,7 +72,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/entrenamientos/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 
