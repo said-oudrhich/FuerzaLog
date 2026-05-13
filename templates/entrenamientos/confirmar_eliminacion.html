@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar Entrenamiento{% endblock %}
+
+{% block content %}
+    <h2>¿Estás seguro de que quieres eliminar este entrenamiento?</h2>
+    <p><strong>{{ entrenamiento.titulo }}</strong></p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
+        <a href="{% url 'entrenamiento_detail' entrenamiento.pk %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+{% endblock %}

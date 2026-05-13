@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ entrenamiento.titulo }}{% endblock %}
+
+{% block content %}
+    <h2>{{ entrenamiento.titulo }}</h2>
+
+    {% if entrenamiento.imagen %}
+        <img src="{{ entrenamiento.imagen.url }}" width="200">
+    {% endif %}
+
+    <p><b>Descripción:</b> {{ entrenamiento.descripcion }}</p>
+    <p><b>Peso:</b> {{ entrenamiento.peso }} kg</p>
+    <p><b>Series:</b> {{ entrenamiento.series }}</p>
+    <p><b>Repeticiones:</b> {{ entrenamiento.repeticiones }}</p>
+    <p><b>Grupo muscular:</b> {{ entrenamiento.grupo_muscular }}</p>
+    {% if entrenamiento.rutina %}
+        <p><b>Rutina:</b> {{ entrenamiento.rutina }}</p>
+    {% endif %}
+    <p><b>Fecha:</b> {{ entrenamiento.fecha_creacion }}</p>
+
+    <a href="{% url 'entrenamiento_list' %}" class="btn btn-secondary">Volver</a>
+    <a href="{% url 'entrenamiento_update' entrenamiento.pk %}" class="btn btn-warning">Editar</a>
+    <a href="{% url 'entrenamiento_delete' entrenamiento.pk %}" class="btn btn-danger">Eliminar</a>
+{% endblock %}

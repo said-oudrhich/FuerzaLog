@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Entrenamientos{% endblock %}
+
+{% block content %}
+    <h2>Mis Entrenamientos</h2>
+    <a href="{% url 'entrenamiento_create' %}" class="btn btn-primary mb-3">Nuevo Entrenamiento</a>
+
+    {% for entrenamiento in entrenamientos %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>{{ entrenamiento.titulo }}</h5>
+                <p>{{ entrenamiento.grupo_muscular }}</p>
+                {% if entrenamiento.imagen %}
+                    <img src="{{ entrenamiento.imagen.url }}" width="100">
+                {% endif %}
+                <br><br>
+                <a href="{% url 'entrenamiento_detail' entrenamiento.pk %}" class="btn btn-info btn-sm">Ver Detalles</a>
+            </div>
+        </div>
+    {% empty %}
+        <p>No tienes entrenamientos.</p>
+    {% endfor %}
+{% endblock %}
