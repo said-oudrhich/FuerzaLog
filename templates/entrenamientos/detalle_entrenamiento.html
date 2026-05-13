@@ -20,6 +20,8 @@
     <p><b>Fecha:</b> {{ entrenamiento.fecha_creacion }}</p>
 
     <a href="{% url 'entrenamiento_list' %}" class="btn btn-secondary">Volver</a>
-    <a href="{% url 'entrenamiento_update' entrenamiento.pk %}" class="btn btn-warning">Editar</a>
-    <a href="{% url 'entrenamiento_delete' entrenamiento.pk %}" class="btn btn-danger">Eliminar</a>
+    {% if entrenamiento.usuario == request.user or request.user.is_staff %}
+        <a href="{% url 'entrenamiento_update' entrenamiento.pk %}" class="btn btn-warning">Editar</a>
+        <a href="{% url 'entrenamiento_delete' entrenamiento.pk %}" class="btn btn-danger">Eliminar</a>
+    {% endif %}
 {% endblock %}
