@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -20,54 +20,54 @@ class EntrenamientoListView(LoginRequiredMixin, ListView):
         return Entrenamiento.objects.filter(usuario=self.request.user)
 
 
-class EntrenamientoDetailView(LoginRequiredMixin, DetailView):
+class EntrenamientoDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Entrenamiento
     template_name = 'entrenamientos/detalle_entrenamiento.html'
+    
+    def test_func(self):
+        return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
 
-@login_required
-def entrenamiento_create(request):
-    if request.method == 'POST':
-        form = EntrenamientoForm(request.POST, request.FILES)
-        if form.is_valid():
-            entrenamiento = form.save(commit=False)
-            entrenamiento.usuario = request.user
-            entrenamiento.save()
-            messages.success(request, 'Entrenamiento creado.')
-            return redirect('entrenamiento_list')
-    else:
-        form = EntrenamientoForm()
-    return render(request, 'entrenamientos/formulario_entrenamiento.html', {'form': form})
+class EntrenamientoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Entrenamiento
+    form_class = EntrenamientoForm
+    template_name = 'entrenamientos/formulario_entrenamiento.html'
+    success_url = reverse_lazy('entrenamiento_list')
+    
+    def form_valid(self, form):
+        form.instance.usuario = self.request.user
+        messages.success(self.request, 'Entrenamiento creado.')
+        return super().form_valid(form)
+    
+    def test_func(self):
+        return True  # Solo necesita estar logueado para crear
 
 
-@login_required
-def entrenamiento_update(request, pk):
-    entrenamiento = get_object_or_404(Entrenamiento, pk=pk)
-    if entrenamiento.usuario != request.user and not request.user.is_staff:
-        messages.error(request, 'No puedes editar esto.')
-        return redirect('entrenamiento_list')
-    if request.method == 'POST':
-        form = EntrenamientoForm(request.POST, request.FILES, instance=entrenamiento)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Entrenamiento actualizado.')
-            return redirect('entrenamiento_list')
-    else:
-        form = EntrenamientoForm(instance=entrenamiento)
-    return render(request, 'entrenamientos/formulario_entrenamiento.html', {'form': form})
+class EntrenamientoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Entrenamiento
+    form_class = EntrenamientoForm
+    template_name = 'entrenamientos/formulario_entrenamiento.html'
+    success_url = reverse_lazy('entrenamiento_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Entrenamiento actualizado.')
+        return super().form_valid(form)
+    
+    def test_func(self):
+        return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
 
-@login_required
-def entrenamiento_delete(request, pk):
-    entrenamiento = get_object_or_404(Entrenamiento, pk=pk)
-    if entrenamiento.usuario != request.user and not request.user.is_staff:
-        messages.error(request, 'No puedes borrar esto.')
-        return redirect('entrenamiento_list')
-    if request.method == 'POST':
-        entrenamiento.delete()
-        messages.success(request, 'Entrenamiento eliminado.')
-        return redirect('entrenamiento_list')
-    return render(request, 'entrenamientos/confirmar_eliminacion.html', {'entrenamiento': entrenamiento})
+class EntrenamientoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Entrenamiento
+    template_name = 'entrenamientos/confirmar_eliminacion.html'
+    success_url = reverse_lazy('entrenamiento_list')
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(self.request, 'Entrenamiento eliminado.')
+        return super().delete(request, *args, **kwargs)
+    
+    def test_func(self):
+        return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
 
 def registro(request):
