@@ -1,27 +1,14 @@
-from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django import forms
+from django.db.models import Q
+from django.shortcuts import render, redirect
 
 from .models import Entrenamiento, Rutina
-
-
-# Formularios definidos antes de las vistas
-class EntrenamientoForm(forms.ModelForm):
-    class Meta:
-        model = Entrenamiento
-        fields = ['titulo', 'descripcion', 'peso', 'series', 'repeticiones', 'imagen', 'grupo_muscular', 'rutina']
-
-
-class RutinaForm(forms.ModelForm):
-    class Meta:
-        model = Rutina
-        fields = ['nombre', 'descripcion']
+from .forms import EntrenamientoForm, RutinaForm
 
 
 class EntrenamientoListView(LoginRequiredMixin, ListView):
@@ -30,30 +17,36 @@ class EntrenamientoListView(LoginRequiredMixin, ListView):
     context_object_name = 'entrenamientos'
 
     def get_queryset(self):
-        return Entrenamiento.objects.filter(usuario=self.request.user)
+        qs = Entrenamiento.objects.filter(usuario=self.request.user)
+        query = self.request.GET.get('q', '')
+        if query:
+            qs = qs.filter(Q(titulo__icontains=query) | Q(descripcion__icontains=query))
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['query'] = self.request.GET.get('q', '')
+        return context
 
 
 class EntrenamientoDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Entrenamiento
     template_name = 'entrenamientos/detalle_entrenamiento.html'
-    
+
     def test_func(self):
         return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
 
-class EntrenamientoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class EntrenamientoCreateView(LoginRequiredMixin, CreateView):
     model = Entrenamiento
     form_class = EntrenamientoForm
     template_name = 'entrenamientos/formulario_entrenamiento.html'
     success_url = reverse_lazy('entrenamiento_list')
-    
+
     def form_valid(self, form):
         form.instance.usuario = self.request.user
         messages.success(self.request, 'Entrenamiento creado.')
         return super().form_valid(form)
-    
-    def test_func(self):
-        return True  # Solo necesita estar logueado para crear
 
 
 class EntrenamientoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -61,11 +54,11 @@ class EntrenamientoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
     form_class = EntrenamientoForm
     template_name = 'entrenamientos/formulario_entrenamiento.html'
     success_url = reverse_lazy('entrenamiento_list')
-    
+
     def form_valid(self, form):
         messages.success(self.request, 'Entrenamiento actualizado.')
         return super().form_valid(form)
-    
+
     def test_func(self):
         return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
@@ -73,12 +66,13 @@ class EntrenamientoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateVie
 class EntrenamientoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Entrenamiento
     template_name = 'entrenamientos/confirmar_eliminacion.html'
+    context_object_name = 'entrenamiento'
     success_url = reverse_lazy('entrenamiento_list')
-    
-    def delete(self, request, *args, **kwargs):
+
+    def form_valid(self, form):
         messages.success(self.request, 'Entrenamiento eliminado.')
-        return super().delete(request, *args, **kwargs)
-    
+        return super().form_valid(form)
+
     def test_func(self):
         return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
@@ -100,27 +94,6 @@ def inicio(request):
     return render(request, 'inicio.html')
 
 
-@login_required
-def buscar(request):
-    query = request.GET.get('q', '')
-    entrenamientos = Entrenamiento.objects.filter(usuario=request.user)
-    if query:
-        entrenamientos = entrenamientos.filter(titulo__icontains=query)
-    return render(request, 'entrenamientos/lista_entrenamientos.html', {'entrenamientos': entrenamientos})
-
-
-class EntrenamientoForm(forms.ModelForm):
-    class Meta:
-        model = Entrenamiento
-        fields = ['titulo', 'descripcion', 'peso', 'series', 'repeticiones', 'imagen', 'grupo_muscular', 'rutina']
-
-
-class RutinaForm(forms.ModelForm):
-    class Meta:
-        model = Rutina
-        fields = ['nombre', 'descripcion']
-
-
 class RutinaListView(LoginRequiredMixin, ListView):
     model = Rutina
     template_name = 'entrenamientos/lista_rutinas.html'
@@ -130,47 +103,42 @@ class RutinaListView(LoginRequiredMixin, ListView):
         return Rutina.objects.filter(usuario=self.request.user)
 
 
-@login_required
-def rutina_create(request):
-    if request.method == 'POST':
-        form = RutinaForm(request.POST)
-        if form.is_valid():
-            rutina = form.save(commit=False)
-            rutina.usuario = request.user
-            rutina.save()
-            messages.success(request, 'Rutina creada.')
-            return redirect('rutina_list')
-    else:
-        form = RutinaForm()
-    return render(request, 'entrenamientos/formulario_rutina.html', {'form': form})
+class RutinaCreateView(LoginRequiredMixin, CreateView):
+    model = Rutina
+    form_class = RutinaForm
+    template_name = 'entrenamientos/formulario_rutina.html'
+    success_url = reverse_lazy('rutina_list')
+
+    def form_valid(self, form):
+        form.instance.usuario = self.request.user
+        messages.success(self.request, 'Rutina creada.')
+        return super().form_valid(form)
 
 
-@login_required
-def rutina_update(request, pk):
-    rutina = get_object_or_404(Rutina, pk=pk)
-    if rutina.usuario != request.user and not request.user.is_staff:
-        messages.error(request, 'No puedes editar esto.')
-        return redirect('rutina_list')
-    if request.method == 'POST':
-        form = RutinaForm(request.POST, instance=rutina)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Rutina actualizada.')
-            return redirect('rutina_list')
-    else:
-        form = RutinaForm(instance=rutina)
-    return render(request, 'entrenamientos/formulario_rutina.html', {'form': form})
+class RutinaUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Rutina
+    form_class = RutinaForm
+    template_name = 'entrenamientos/formulario_rutina.html'
+    success_url = reverse_lazy('rutina_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Rutina actualizada.')
+        return super().form_valid(form)
+
+    def test_func(self):
+        return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
 
-@login_required
-def rutina_delete(request, pk):
-    rutina = get_object_or_404(Rutina, pk=pk)
-    if rutina.usuario != request.user and not request.user.is_staff:
-        messages.error(request, 'No puedes borrar esto.')
-        return redirect('rutina_list')
-    if request.method == 'POST':
-        rutina.delete()
-        messages.success(request, 'Rutina eliminada.')
-        return redirect('rutina_list')
-    return render(request, 'entrenamientos/confirmar_eliminacion_rutina.html', {'rutina': rutina})
+class RutinaDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Rutina
+    template_name = 'entrenamientos/confirmar_eliminacion_rutina.html'
+    context_object_name = 'rutina'
+    success_url = reverse_lazy('rutina_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Rutina eliminada.')
+        return super().form_valid(form)
+
+    def test_func(self):
+        return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
