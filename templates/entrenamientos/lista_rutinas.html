@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Rutinas{% endblock %}
+
+{% block content %}
+    <h2>Mis Rutinas</h2>
+    <a href="{% url 'rutina_create' %}" class="btn btn-primary mb-3">Nueva Rutina</a>
+
+    {% for rutina in rutinas %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>{{ rutina.nombre }}</h5>
+                <p>{{ rutina.descripcion|truncatechars:100 }}</p>
+                <p><small>{{ rutina.fecha_creacion }}</small></p>
+                <a href="{% url 'rutina_update' rutina.pk %}" class="btn btn-warning btn-sm">Editar</a>
+                <a href="{% url 'rutina_delete' rutina.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+            </div>
+        </div>
+    {% empty %}
+        <p>No tienes rutinas.</p>
+    {% endfor %}
+{% endblock %}

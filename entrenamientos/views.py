@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django import forms
 
-from .models import Entrenamiento
+from .models import Entrenamiento, Rutina
 
 
 class EntrenamientoListView(LoginRequiredMixin, ListView):
@@ -87,19 +87,12 @@ def inicio(request):
     return render(request, 'inicio.html')
 
 
-from django.db.models import Q
-
-
 @login_required
 def buscar(request):
     query = request.GET.get('q', '')
+    entrenamientos = Entrenamiento.objects.filter(usuario=request.user)
     if query:
-        entrenamientos = Entrenamiento.objects.filter(
-            Q(titulo__icontains=query) | Q(descripcion__icontains=query),
-            usuario=request.user
-        )
-    else:
-        entrenamientos = Entrenamiento.objects.filter(usuario=request.user)
+        entrenamientos = entrenamientos.filter(titulo__icontains=query)
     return render(request, 'entrenamientos/lista_entrenamientos.html', {'entrenamientos': entrenamientos})
 
 
@@ -107,4 +100,64 @@ class EntrenamientoForm(forms.ModelForm):
     class Meta:
         model = Entrenamiento
         fields = ['titulo', 'descripcion', 'peso', 'series', 'repeticiones', 'imagen', 'grupo_muscular', 'rutina']
+
+
+class RutinaForm(forms.ModelForm):
+    class Meta:
+        model = Rutina
+        fields = ['nombre', 'descripcion']
+
+
+class RutinaListView(LoginRequiredMixin, ListView):
+    model = Rutina
+    template_name = 'entrenamientos/lista_rutinas.html'
+    context_object_name = 'rutinas'
+
+    def get_queryset(self):
+        return Rutina.objects.filter(usuario=self.request.user)
+
+
+@login_required
+def rutina_create(request):
+    if request.method == 'POST':
+        form = RutinaForm(request.POST)
+        if form.is_valid():
+            rutina = form.save(commit=False)
+            rutina.usuario = request.user
+            rutina.save()
+            messages.success(request, 'Rutina creada.')
+            return redirect('rutina_list')
+    else:
+        form = RutinaForm()
+    return render(request, 'entrenamientos/formulario_rutina.html', {'form': form})
+
+
+@login_required
+def rutina_update(request, pk):
+    rutina = get_object_or_404(Rutina, pk=pk)
+    if rutina.usuario != request.user and not request.user.is_staff:
+        messages.error(request, 'No puedes editar esto.')
+        return redirect('rutina_list')
+    if request.method == 'POST':
+        form = RutinaForm(request.POST, instance=rutina)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Rutina actualizada.')
+            return redirect('rutina_list')
+    else:
+        form = RutinaForm(instance=rutina)
+    return render(request, 'entrenamientos/formulario_rutina.html', {'form': form})
+
+
+@login_required
+def rutina_delete(request, pk):
+    rutina = get_object_or_404(Rutina, pk=pk)
+    if rutina.usuario != request.user and not request.user.is_staff:
+        messages.error(request, 'No puedes borrar esto.')
+        return redirect('rutina_list')
+    if request.method == 'POST':
+        rutina.delete()
+        messages.success(request, 'Rutina eliminada.')
+        return redirect('rutina_list')
+    return render(request, 'entrenamientos/confirmar_eliminacion_rutina.html', {'rutina': rutina})
 

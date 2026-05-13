@@ -9,5 +9,9 @@ urlpatterns = [
     path('entrenamiento/<int:pk>/eliminar/', views.entrenamiento_delete, name='entrenamiento_delete'),
     path('registro/', views.registro, name='registro'),
     path('buscar/', views.buscar, name='buscar'),
+    path('rutinas/', views.RutinaListView.as_view(), name='rutina_list'),
+    path('rutina/nueva/', views.rutina_create, name='rutina_create'),
+    path('rutina/<int:pk>/editar/', views.rutina_update, name='rutina_update'),
+    path('rutina/<int:pk>/eliminar/', views.rutina_delete, name='rutina_delete'),
 ]
 
