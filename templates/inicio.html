@@ -1,8 +1,19 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Inicio - FuerzaLog{% endblock %}
 
 {% block content %}
-    <h2>Bienvenido a FuerzaLog</h2>
-    <p>Este proyecto usa Django con vistas básicas y plantillas sencillas.</p>
+<div class="text-center py-5">
+    <img src="{% static 'logo.svg' %}" height="80" alt="FuerzaLog" class="mb-3">
+    <h1 class="display-5 fw-bold">Bienvenido a FuerzaLog</h1>
+    <p class="lead text-muted">Tu diario de entrenamiento personal. Registra ejercicios, organiza rutinas y sigue tu progreso.</p>
+    {% if user.is_authenticated %}
+        <a href="{% url 'entrenamiento_list' %}" class="btn btn-primary btn-lg me-2">Mis Entrenamientos</a>
+        <a href="{% url 'entrenamiento_create' %}" class="btn btn-outline-primary btn-lg">Nuevo Entrenamiento</a>
+    {% else %}
+        <a href="{% url 'registro' %}" class="btn btn-primary btn-lg me-2">Crear cuenta</a>
+        <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Iniciar sesión</a>
+    {% endif %}
+</div>
 {% endblock %}
