@@ -11,6 +11,19 @@ from django import forms
 from .models import Entrenamiento, Rutina
 
 
+# Formularios definidos antes de las vistas
+class EntrenamientoForm(forms.ModelForm):
+    class Meta:
+        model = Entrenamiento
+        fields = ['titulo', 'descripcion', 'peso', 'series', 'repeticiones', 'imagen', 'grupo_muscular', 'rutina']
+
+
+class RutinaForm(forms.ModelForm):
+    class Meta:
+        model = Rutina
+        fields = ['nombre', 'descripcion']
+
+
 class EntrenamientoListView(LoginRequiredMixin, ListView):
     model = Entrenamiento
     template_name = 'entrenamientos/lista_entrenamientos.html'
