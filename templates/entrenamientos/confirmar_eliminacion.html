@@ -1,13 +1,21 @@
 {% extends "base.html" %}
 
-{% block title %}Eliminar Entrenamiento{% endblock %}
+{% block title %}Confirmar eliminación{% endblock %}
 
 {% block content %}
-    <h2>¿Estás seguro de que quieres eliminar este entrenamiento?</h2>
-    <p><strong>{{ entrenamiento.titulo }}</strong></p>
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
-        <a href="{% url 'entrenamiento_detail' entrenamiento.pk %}" class="btn btn-secondary">Cancelar</a>
-    </form>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger shadow-sm">
+            <div class="card-body p-4 text-center">
+                <h4 class="mb-3">¿Seguro que quieres eliminar esto?</h4>
+                <p class="text-muted"><strong>{{ objeto }}</strong></p>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger me-2">Sí, eliminar</button>
+                    <a href="javascript:history.back()" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

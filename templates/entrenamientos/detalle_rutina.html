@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ rutina.nombre }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h2>{{ rutina.nombre }}</h2>
+        {% if rutina.descripcion %}<p class="text-muted">{{ rutina.descripcion }}</p>{% endif %}
+    </div>
+    {% if rutina.usuario == request.user or request.user.is_staff %}
+        <div class="d-flex gap-2">
+            <a href="{% url 'rutina_update' rutina.pk %}" class="btn btn-warning btn-sm">Editar</a>
+            <a href="{% url 'rutina_delete' rutina.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+        </div>
+    {% endif %}
+</div>
+
+<h5>Ejercicios</h5>
+{% for bloque in ejercicios %}
+    <div class="card mb-2 shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <strong>{{ bloque.ejercicio.nombre }}</strong>
+            <span class="badge bg-secondary">{{ bloque.ejercicio.grupo_muscular }}</span>
+        </div>
+        {% if bloque.notas %}<div class="card-body py-1"><small class="text-muted">{{ bloque.notas }}</small></div>{% endif %}
+        <ul class="list-group list-group-flush">
+            {% for s in bloque.series.all %}
+                <li class="list-group-item small">
+                    <span class="badge bg-light text-dark me-1">{{ s.get_tipo_display }}</span>
+                    {{ s.repeticiones }} reps
+                    {% if s.peso_kg %}@ {{ s.peso_kg }} kg{% endif %}
+                </li>
+            {% empty %}
+                <li class="list-group-item text-muted small">Sin series definidas.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% empty %}
+    <p class="text-muted">Esta rutina no tiene ejercicios aún.</p>
+{% endfor %}
+
+<div class="mt-3 d-flex gap-2">
+    <a href="{% url 'rutina_list' %}" class="btn btn-secondary btn-sm">← Volver</a>
+    <a href="{% url 'workout_create' %}" class="btn btn-primary btn-sm">Empezar workout con esta rutina</a>
+</div>
+{% endblock %}

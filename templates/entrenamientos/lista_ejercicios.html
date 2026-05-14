@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Ejercicios{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2>Ejercicios</h2>
+        <p class="text-muted small mb-0">Catálogo global + tus ejercicios personalizados.</p>
+    </div>
+    <a href="{% url 'ejercicio_create' %}" class="btn btn-primary">+ Ejercicio personalizado</a>
+</div>
+
+{% if query %}
+    <p class="text-muted">Resultados para: <strong>{{ query }}</strong></p>
+{% endif %}
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+    {% for ejercicio in ejercicios %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                {% if ejercicio.imagen %}
+                    <img src="{{ ejercicio.imagen.url }}" class="card-img-top" style="height:160px;object-fit:cover;" alt="{{ ejercicio.nombre }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ ejercicio.nombre }}</h5>
+                    <span class="badge bg-secondary mb-2">{{ ejercicio.grupo_muscular }}</span>
+                    <p class="card-text text-muted small">{{ ejercicio.descripcion|truncatechars:80 }}</p>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <a href="{% url 'ejercicio_detail' ejercicio.pk %}" class="btn btn-info btn-sm flex-grow-1">Ver historial</a>
+                    {% if ejercicio.usuario == request.user %}
+                        <a href="{% url 'ejercicio_update' ejercicio.pk %}" class="btn btn-warning btn-sm">✎</a>
+                        <a href="{% url 'ejercicio_delete' ejercicio.pk %}" class="btn btn-danger btn-sm">✕</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <p class="text-muted">El catálogo está vacío. Pídele al administrador que añada ejercicios.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}{{ workout }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h2>{{ workout.titulo|default:"Entrenamiento" }}</h2>
+        <p class="text-muted mb-0">
+            {{ workout.fecha|date:"d/m/Y" }}
+            {% if workout.rutina %} &middot; {{ workout.rutina }}{% endif %}
+            {% if workout.duracion_min %} &middot; {{ workout.duracion_min }} min{% endif %}
+        </p>
+        {% if workout.notas %}<p class="small mt-1">{{ workout.notas }}</p>{% endif %}
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'workout_update' workout.pk %}" class="btn btn-warning btn-sm">Editar</a>
+        <a href="{% url 'workout_delete' workout.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+    </div>
+</div>
+
+<hr>
+
+{% for bloque in bloques %}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>{{ bloque.ejercicio.nombre }}</strong>
+            <span class="badge bg-secondary">{{ bloque.ejercicio.grupo_muscular }}</span>
+            <form method="post" action="{% url 'bloque_borrar' bloque.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Quitar este ejercicio?')">✕</button>
+            </form>
+        </div>
+        {% if bloque.notas %}<div class="card-body py-1"><small class="text-muted">{{ bloque.notas }}</small></div>{% endif %}
+        <div class="card-body pt-2">
+            <table class="table table-sm mb-2">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Tipo</th>
+                        <th>Peso (kg)</th>
+                        <th>Reps</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for serie in bloque.series.all %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ serie.get_tipo_display }}</td>
+                            <td>{{ serie.peso_kg|default:"—" }}</td>
+                            <td>{{ serie.repeticiones }}</td>
+                            <td>
+                                <form method="post" action="{% url 'serie_borrar' serie.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button class="btn btn-link btn-sm text-danger p-0">✕</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-muted small">Sin series aún.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Añadir serie -->
+            <form method="post" action="{% url 'serie_crear' bloque.pk %}" class="row g-2 align-items-end">
+                {% csrf_token %}
+                <div class="col-auto">
+                    <select name="tipo" class="form-select form-select-sm">
+                        <option value="normal">Normal</option>
+                        <option value="calentamiento">Calentamiento</option>
+                        <option value="fallo">Al fallo</option>
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <input type="number" name="peso_kg" class="form-control form-control-sm" placeholder="Peso kg" step="0.5" min="0" style="width:100px">
+                </div>
+                <div class="col-auto">
+                    <input type="number" name="repeticiones" class="form-control form-control-sm" placeholder="Reps" min="1" required style="width:80px">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-success btn-sm">+ Serie</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% empty %}
+    <p class="text-muted">Todavía no has añadido ejercicios a este workout.</p>
+{% endfor %}
+
+<hr>
+<h5>Añadir ejercicio</h5>
+<form method="post" class="row g-2 align-items-end mt-2">
+    {% csrf_token %}
+    <div class="col-md-6">
+        {{ form_ejercicio.ejercicio }}
+    </div>
+    <div class="col-md-4">
+        {{ form_ejercicio.notas }}
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Añadir</button>
+    </div>
+</form>
+{% endblock %}

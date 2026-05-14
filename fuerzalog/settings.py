@@ -72,7 +72,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-LOGIN_REDIRECT_URL = '/entrenamientos/'
+LOGIN_REDIRECT_URL = '/workouts/'
 LOGOUT_REDIRECT_URL = '/'
 LOGIN_URL = 'login'
 

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Workouts{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Mis Workouts</h2>
+    <a href="{% url 'workout_create' %}" class="btn btn-primary">+ Nuevo Workout</a>
+</div>
+
+{% if workouts %}
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+        {% for w in workouts %}
+            <div class="col">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ w.titulo|default:"Entrenamiento" }}</h5>
+                        <p class="text-muted small mb-1">
+                            {{ w.fecha|date:"d/m/Y" }}
+                            {% if w.rutina %} &middot; <span class="badge bg-secondary">{{ w.rutina }}</span>{% endif %}
+                            {% if w.duracion_min %} &middot; {{ w.duracion_min }} min{% endif %}
+                        </p>
+                        <p class="small">{{ w.ejercicios.count }} ejercicio(s)</p>
+                    </div>
+                    <div class="card-footer d-flex gap-2">
+                        <a href="{% url 'workout_detail' w.pk %}" class="btn btn-info btn-sm">Ver</a>
+                        <a href="{% url 'workout_update' w.pk %}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{% url 'workout_delete' w.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-muted">Todavía no tienes ningún workout. <a href="{% url 'workout_create' %}">Crea uno</a>.</p>
+{% endif %}
+{% endblock %}

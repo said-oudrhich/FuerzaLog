@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Sesión {{ sesion.fecha|date:"d/m/Y" }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h2>Sesión del {{ sesion.fecha|date:"d/m/Y" }}</h2>
+        {% if sesion.rutina %}
+            <span class="badge bg-primary fs-6">{{ sesion.rutina }}</span>
+        {% else %}
+            <span class="badge bg-secondary fs-6">Sin rutina asignada</span>
+        {% endif %}
+        {% if sesion.notas %}
+            <p class="mt-2 text-muted">{{ sesion.notas }}</p>
+        {% endif %}
+    </div>
+    {% if sesion.usuario == request.user or request.user.is_staff %}
+        <div class="d-flex gap-2">
+            <a href="{% url 'sesion_update' sesion.pk %}" class="btn btn-warning btn-sm">Editar sesión</a>
+            <a href="{% url 'sesion_delete' sesion.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+        </div>
+    {% endif %}
+</div>
+
+<hr>
+
+<!-- Ejercicios registrados -->
+<h5>Ejercicios de esta sesión</h5>
+{% if registros %}
+    <table class="table table-hover mt-2">
+        <thead class="table-dark">
+            <tr>
+                <th>Ejercicio</th>
+                <th>Series</th>
+                <th>Reps</th>
+                <th>Peso (kg)</th>
+                <th>Notas</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in registros %}
+                <tr>
+                    <td><a href="{% url 'ejercicio_detail' r.ejercicio.pk %}">{{ r.ejercicio }}</a></td>
+                    <td>{{ r.series }}</td>
+                    <td>{{ r.repeticiones }}</td>
+                    <td>{{ r.peso_kg|default:"—" }}</td>
+                    <td class="text-muted small">{{ r.notas }}</td>
+                    <td>
+                        <a href="{% url 'registro_delete' r.pk %}" class="btn btn-danger btn-sm">×</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p class="text-muted">Todavía no has añadido ejercicios a esta sesión.</p>
+{% endif %}
+
+<!-- Formulario para añadir ejercicio -->
+{% if sesion.usuario == request.user or request.user.is_staff %}
+<div class="card mt-4 shadow-sm">
+    <div class="card-header"><strong>Añadir ejercicio a esta sesión</strong></div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form_registro.as_p }}
+            <button type="submit" class="btn btn-primary">Añadir</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<a href="{% url 'sesion_list' %}" class="btn btn-secondary mt-3">Volver a mis sesiones</a>
+{% endblock %}
