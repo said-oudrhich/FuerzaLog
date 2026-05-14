@@ -1,14 +1,15 @@
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Ejercicio, Rutina, RutinaEjercicio, Workout, WorkoutEjercicio, Serie
-from .forms import EjercicioForm, RutinaForm, WorkoutForm, WorkoutEjercicioForm, SerieForm, SerieFormSet
+from .models import Ejercicio, Rutina, Workout, WorkoutEjercicio, Serie
+from .forms import EjercicioForm, RutinaForm, WorkoutForm, WorkoutEjercicioForm, SerieForm
 
 
 def inicio(request):
@@ -199,21 +200,9 @@ class WorkoutDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             .select_related('ejercicio__grupo_muscular')
             .prefetch_related('series')
         )
-        context['form_ejercicio'] = WorkoutEjercicioForm(usuario=self.request.user)
+        context['form_ejercicio'] = WorkoutEjercicioForm()
+        context['form_serie'] = SerieForm()
         return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form = WorkoutEjercicioForm(request.POST, usuario=request.user)
-        if form.is_valid():
-            bloque = form.save(commit=False)
-            bloque.workout = self.object
-            bloque.orden = self.object.ejercicios.count()
-            bloque.save()
-            messages.success(request, 'Ejercicio añadido.')
-        else:
-            messages.error(request, 'Elige un ejercicio válido.')
-        return redirect('workout_detail', pk=self.object.pk)
 
     def test_func(self):
         return self.get_object().usuario == self.request.user or self.request.user.is_staff
@@ -223,11 +212,6 @@ class WorkoutCreateView(LoginRequiredMixin, CreateView):
     model = Workout
     form_class = WorkoutForm
     template_name = 'entrenamientos/formulario_workout.html'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['usuario'] = self.request.user
-        return kwargs
 
     def form_valid(self, form):
         form.instance.usuario = self.request.user
@@ -243,11 +227,6 @@ class WorkoutUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = WorkoutForm
     template_name = 'entrenamientos/formulario_workout.html'
     success_url = reverse_lazy('workout_list')
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['usuario'] = self.request.user
-        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, 'Entrenamiento actualizado.')
@@ -273,6 +252,23 @@ class WorkoutDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 # ── Series dentro de un bloque ───────────────────────────────
 
+@login_required
+def ejercicio_anadir(request, workout_pk):
+    workout = get_object_or_404(Workout, pk=workout_pk, usuario=request.user)
+    if request.method == 'POST':
+        form = WorkoutEjercicioForm(request.POST)
+        if form.is_valid():
+            bloque = form.save(commit=False)
+            bloque.workout = workout
+            bloque.orden = workout.ejercicios.count()
+            bloque.save()
+            messages.success(request, 'Ejercicio añadido.')
+        else:
+            messages.error(request, 'Elige un ejercicio válido.')
+    return redirect('workout_detail', pk=workout_pk)
+
+
+@login_required
 def serie_crear(request, bloque_pk):
     bloque = get_object_or_404(WorkoutEjercicio, pk=bloque_pk, workout__usuario=request.user)
     if request.method == 'POST':
@@ -285,6 +281,7 @@ def serie_crear(request, bloque_pk):
     return redirect('workout_detail', pk=bloque.workout.pk)
 
 
+@login_required
 def serie_borrar(request, pk):
     serie = get_object_or_404(Serie, pk=pk, workout_ejercicio__workout__usuario=request.user)
     workout_pk = serie.workout_ejercicio.workout.pk
@@ -293,6 +290,7 @@ def serie_borrar(request, pk):
     return redirect('workout_detail', pk=workout_pk)
 
 
+@login_required
 def bloque_borrar(request, pk):
     bloque = get_object_or_404(WorkoutEjercicio, pk=pk, workout__usuario=request.user)
     workout_pk = bloque.workout.pk

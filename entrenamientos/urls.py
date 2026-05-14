@@ -26,7 +26,8 @@ urlpatterns = [
     path('workout/<int:pk>/editar/', views.WorkoutUpdateView.as_view(), name='workout_update'),
     path('workout/<int:pk>/eliminar/', views.WorkoutDeleteView.as_view(), name='workout_delete'),
 
-    # Series y bloques (acciones rápidas desde detalle de workout)
+    # Acciones dentro del detalle de workout
+    path('workout/<int:workout_pk>/ejercicio/anadir/', views.ejercicio_anadir, name='ejercicio_anadir'),
     path('bloque/<int:bloque_pk>/serie/nueva/', views.serie_crear, name='serie_crear'),
     path('serie/<int:pk>/borrar/', views.serie_borrar, name='serie_borrar'),
     path('bloque/<int:pk>/borrar/', views.bloque_borrar, name='bloque_borrar'),
