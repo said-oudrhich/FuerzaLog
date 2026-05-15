@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 
-{% block title %}{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Workout{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} entrenamiento{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-7">
-        <h2 class="mb-4">{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} workout</h2>
+        <h2 class="mb-4">{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} entrenamiento</h2>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
+            <p class="text-muted small">Puedes elegir una rutina para empezar con sus ejercicios.</p>
             <div class="d-flex gap-2 mt-3">
                 <button type="submit" class="btn btn-primary">Guardar</button>
                 <a href="{% url 'workout_list' %}" class="btn btn-secondary">Cancelar</a>

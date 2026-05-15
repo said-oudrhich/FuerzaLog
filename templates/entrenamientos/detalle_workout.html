@@ -5,13 +5,13 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-start mb-3">
     <div>
-        <h2>{{ workout.titulo|default:"Entrenamiento" }}</h2>
+        <h2>{{ workout.nombre|default:"Entrenamiento" }}</h2>
+        <p class="text-muted mb-1">Entrenamiento realizado</p>
         <p class="text-muted mb-0">
             {{ workout.fecha|date:"d/m/Y" }}
-            {% if workout.rutina %} &middot; {{ workout.rutina }}{% endif %}
-            {% if workout.duracion_min %} &middot; {{ workout.duracion_min }} min{% endif %}
+            {% if workout.rutina %} · Rutina: {{ workout.rutina }}{% endif %}
         </p>
-        {% if workout.notas %}<p class="small mt-1">{{ workout.notas }}</p>{% endif %}
+        {% if workout.descripcion %}<p class="small mt-1">{{ workout.descripcion }}</p>{% endif %}
     </div>
     <div class="d-flex gap-2">
         <a href="{% url 'workout_update' workout.pk %}" class="btn btn-warning btn-sm">Editar</a>
@@ -22,71 +22,72 @@
 <hr>
 
 {% for bloque in bloques %}
-    <div class="card mb-3 shadow-sm">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <strong>{{ bloque.ejercicio.nombre }}</strong>
-            <span class="badge bg-secondary">{{ bloque.ejercicio.grupo_muscular }}</span>
+    <div class="border rounded p-3 mb-3 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <strong>{{ bloque.ejercicio.nombre }}</strong>
+                <span class="text-muted small">({{ bloque.ejercicio.grupo_muscular }})</span>
+            </div>
             <form method="post" action="{% url 'bloque_borrar' bloque.pk %}" class="d-inline">
                 {% csrf_token %}
-                <button class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Quitar este ejercicio?')">✕</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Quitar este ejercicio?')">Quitar</button>
             </form>
         </div>
-        {% if bloque.notas %}<div class="card-body py-1"><small class="text-muted">{{ bloque.notas }}</small></div>{% endif %}
-        <div class="card-body pt-2">
-            <table class="table table-sm mb-2">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Tipo</th>
-                        <th>Peso (kg)</th>
-                        <th>Reps</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for serie in bloque.series.all %}
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ serie.get_tipo_display }}</td>
-                            <td>{{ serie.peso_kg|default:"—" }}</td>
-                            <td>{{ serie.repeticiones }}</td>
-                            <td>
-                                <form method="post" action="{% url 'serie_borrar' serie.pk %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button class="btn btn-link btn-sm text-danger p-0">✕</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr><td colspan="5" class="text-muted small">Sin series aún.</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        {% if bloque.notas %}<p class="small mb-2">{{ bloque.notas }}</p>{% endif %}
 
-            <!-- Añadir serie -->
-            <form method="post" action="{% url 'serie_crear' bloque.pk %}" class="row g-2 align-items-end">
-                {% csrf_token %}
-                <div class="col-auto">
-                    <select name="tipo" class="form-select form-select-sm">
-                        <option value="normal">Normal</option>
-                        <option value="calentamiento">Calentamiento</option>
-                        <option value="fallo">Al fallo</option>
-                    </select>
-                </div>
-                <div class="col-auto">
-                    <input type="number" name="peso_kg" class="form-control form-control-sm" placeholder="Peso kg" step="0.5" min="0" style="width:100px">
-                </div>
-                <div class="col-auto">
-                    <input type="number" name="repeticiones" class="form-control form-control-sm" placeholder="Reps" min="1" required style="width:80px">
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-success btn-sm">+ Serie</button>
-                </div>
-            </form>
-        </div>
+        <table class="table table-sm mb-2">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tipo</th>
+                    <th>Peso (kg)</th>
+                    <th>Reps</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for serie in bloque.series.all %}
+                <tr>
+                    <td class="text-muted">{{ forloop.counter }}</td>
+                    <td>{{ serie.get_tipo_display }}</td>
+                    <td>{{ serie.peso_kg|default:"—" }}</td>
+                    <td>{% if serie.tipo == 'F' %}al fallo{% else %}{{ serie.repeticiones }}{% endif %}</td>
+                    <td>
+                        <form method="post" action="{% url 'serie_borrar' serie.pk %}">
+                            {% csrf_token %}
+                            <button class="btn btn-link btn-sm text-danger p-0">✕</button>
+                        </form>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-muted small">Sin series todavía.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <form method="post" action="{% url 'serie_crear' bloque.pk %}" class="row g-2 align-items-center">
+            {% csrf_token %}
+            <div class="col-auto">
+                <select name="tipo" class="form-select form-select-sm">
+                    <option value="N">Normal</option>
+                    <option value="W">Calentamiento</option>
+                    <option value="F">Al fallo</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <input type="number" name="peso_kg" class="form-control form-control-sm" placeholder="Peso kg" step="0.5" min="0" style="width:100px">
+            </div>
+            <div class="col-auto">
+                <input type="number" name="repeticiones" class="form-control form-control-sm" placeholder="Reps" min="0" value="0" style="width:80px">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-success btn-sm">+ Serie</button>
+            </div>
+        </form>
+        <p class="text-muted small mt-1">Si es "Al fallo" puedes dejar reps en 0.</p>
     </div>
 {% empty %}
-    <p class="text-muted">Todavía no has añadido ejercicios a este workout.</p>
+    <p class="text-muted">Todavía no hay ejercicios en este entrenamiento.</p>
 {% endfor %}
 
 <hr>

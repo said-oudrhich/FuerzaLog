@@ -58,10 +58,9 @@
 
                 {% if user.is_authenticated %}
 
-                    <!-- Links principales -->
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'workout_list' %}">Mis Workouts</a>
+                            <a class="nav-link" href="{% url 'workout_list' %}">Entrenamientos</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'ejercicio_list' %}">Ejercicios</a>
@@ -70,13 +69,10 @@
                             <a class="nav-link" href="{% url 'rutina_list' %}">Rutinas</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'workout_create' %}">
-                                <span class="badge bg-primary">+ Workout</span>
-                            </a>
+                            <a class="nav-link" href="{% url 'workout_create' %}">Nuevo entrenamiento</a>
                         </li>
                     </ul>
 
-                    <!-- Búsqueda -->
                     <form class="d-flex me-3" action="{% url 'ejercicio_list' %}" method="get">
                         <input class="form-control form-control-sm me-2" type="search" name="q"
                                placeholder="Buscar ejercicio..." style="min-width:180px;"

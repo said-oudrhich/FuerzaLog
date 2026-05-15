@@ -5,12 +5,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Mis Rutinas</h2>
-    <a href="{% url 'rutina_create' %}" class="btn btn-primary">+ Nueva rutina</a>
+    <a href="{% url 'rutina_create' %}" class="btn btn-primary">Nueva rutina</a>
 </div>
 
 {% for rutina in rutinas %}
-    <div class="card mb-3 shadow-sm">
-        <div class="card-body d-flex justify-content-between align-items-center">
+    <div class="list-group mb-2">
+        <div class="list-group-item d-flex justify-content-between align-items-center">
             <div>
                 <h5 class="mb-1">{{ rutina.nombre }}</h5>
                 <p class="text-muted small mb-0">{{ rutina.descripcion|truncatechars:80 }}</p>
@@ -18,6 +18,7 @@
             </div>
             <div class="d-flex gap-2">
                 <a href="{% url 'rutina_detail' rutina.pk %}" class="btn btn-info btn-sm">Ver</a>
+                <a href="{% url 'workout_create' %}?rutina={{ rutina.pk }}" class="btn btn-primary btn-sm">Usar</a>
                 <a href="{% url 'rutina_update' rutina.pk %}" class="btn btn-warning btn-sm">Editar</a>
                 <a href="{% url 'rutina_delete' rutina.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
             </div>

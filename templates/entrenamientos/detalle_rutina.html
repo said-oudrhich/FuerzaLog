@@ -6,7 +6,8 @@
 <div class="d-flex justify-content-between align-items-start mb-3">
     <div>
         <h2>{{ rutina.nombre }}</h2>
-        {% if rutina.descripcion %}<p class="text-muted">{{ rutina.descripcion }}</p>{% endif %}
+        <p class="text-muted mb-1">Plantilla de entrenamiento</p>
+        {% if rutina.descripcion %}<p>{{ rutina.descripcion }}</p>{% endif %}
     </div>
     {% if rutina.usuario == request.user or request.user.is_staff %}
         <div class="d-flex gap-2">
@@ -16,32 +17,68 @@
     {% endif %}
 </div>
 
-<h5>Ejercicios</h5>
+<hr>
+
+<h5>Ejercicios de la rutina</h5>
+
 {% for bloque in ejercicios %}
-    <div class="card mb-2 shadow-sm">
-        <div class="card-header d-flex justify-content-between">
-            <strong>{{ bloque.ejercicio.nombre }}</strong>
-            <span class="badge bg-secondary">{{ bloque.ejercicio.grupo_muscular }}</span>
+    <div class="border rounded p-3 mb-3 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <strong>{{ bloque.ejercicio.nombre }}</strong>
+                <span class="text-muted small">({{ bloque.ejercicio.grupo_muscular }})</span>
+            </div>
+            <form method="post" action="{% url 'rutina_ejercicio_borrar' bloque.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Quitar este ejercicio?')">Quitar</button>
+            </form>
         </div>
-        {% if bloque.notas %}<div class="card-body py-1"><small class="text-muted">{{ bloque.notas }}</small></div>{% endif %}
-        <ul class="list-group list-group-flush">
-            {% for s in bloque.series.all %}
-                <li class="list-group-item small">
-                    <span class="badge bg-light text-dark me-1">{{ s.get_tipo_display }}</span>
-                    {{ s.repeticiones }} reps
-                    {% if s.peso_kg %}@ {{ s.peso_kg }} kg{% endif %}
-                </li>
-            {% empty %}
-                <li class="list-group-item text-muted small">Sin series definidas.</li>
-            {% endfor %}
-        </ul>
+        {% if bloque.notas %}<p class="small mb-2">{{ bloque.notas }}</p>{% endif %}
+
+        {% if bloque.series.first %}
+            <p class="small text-muted mb-1">
+                {{ bloque.series.first.num_series }} serie(s) planificadas
+                <form method="post" action="{% url 'rutina_serie_borrar' bloque.series.first.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-link btn-sm text-danger p-0">Quitar</button>
+                </form>
+            </p>
+        {% else %}
+            <form method="post" action="{% url 'rutina_serie_crear' bloque.pk %}" class="row g-2 align-items-center mb-1">
+                {% csrf_token %}
+                <div class="col-auto">
+                    <label class="col-form-label col-form-label-sm">Número de series:</label>
+                </div>
+                <div class="col-auto">
+                    <input type="number" name="num_series" class="form-control form-control-sm" value="3" min="1" max="10" style="width:70px">
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Guardar</button>
+                </div>
+            </form>
+        {% endif %}
     </div>
 {% empty %}
-    <p class="text-muted">Esta rutina no tiene ejercicios aún.</p>
+    <p class="text-muted">Todavía no hay ejercicios en esta rutina.</p>
 {% endfor %}
 
-<div class="mt-3 d-flex gap-2">
+<hr>
+<h5>Añadir ejercicio</h5>
+<form method="post" action="{% url 'rutina_ejercicio_anadir' rutina.pk %}" class="row g-2 align-items-end mt-2">
+    {% csrf_token %}
+    <div class="col-md-6">
+        {{ form_ejercicio.ejercicio }}
+    </div>
+    <div class="col-md-4">
+        {{ form_ejercicio.notas }}
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Añadir</button>
+    </div>
+</form>
+
+<div class="mt-4">
     <a href="{% url 'rutina_list' %}" class="btn btn-secondary btn-sm">← Volver</a>
-    <a href="{% url 'workout_create' %}" class="btn btn-primary btn-sm">Empezar workout con esta rutina</a>
+    <a href="{% url 'workout_create' %}?rutina={{ rutina.pk }}" class="btn btn-primary btn-sm">Usar esta rutina</a>
 </div>
 {% endblock %}
