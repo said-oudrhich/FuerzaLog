@@ -19,6 +19,12 @@ urlpatterns = [
     path('rutina/<int:pk>/editar/', views.RutinaUpdateView.as_view(), name='rutina_update'),
     path('rutina/<int:pk>/eliminar/', views.RutinaDeleteView.as_view(), name='rutina_delete'),
 
+    # Acciones dentro del detalle de rutina
+    path('rutina/<int:rutina_pk>/ejercicio/anadir/', views.rutina_ejercicio_anadir, name='rutina_ejercicio_anadir'),
+    path('rutina-bloque/<int:pk>/borrar/', views.rutina_ejercicio_borrar, name='rutina_ejercicio_borrar'),
+    path('rutina-bloque/<int:bloque_pk>/serie/nueva/', views.rutina_serie_crear, name='rutina_serie_crear'),
+    path('rutina-serie/<int:pk>/borrar/', views.rutina_serie_borrar, name='rutina_serie_borrar'),
+
     # Workouts
     path('workouts/', views.WorkoutListView.as_view(), name='workout_list'),
     path('workout/<int:pk>/', views.WorkoutDetailView.as_view(), name='workout_detail'),

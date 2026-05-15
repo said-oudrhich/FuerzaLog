@@ -8,8 +8,9 @@ from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Ejercicio, Rutina, Workout, WorkoutEjercicio, Serie
-from .forms import EjercicioForm, RutinaForm, WorkoutForm, WorkoutEjercicioForm, SerieForm
+from .models import Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Workout, WorkoutEjercicio, Serie
+from .forms import EjercicioForm, RutinaForm, RutinaEjercicioForm, SerieRutinaForm, WorkoutForm, WorkoutEjercicioForm, SerieForm
+
 
 
 def inicio(request):
@@ -64,7 +65,7 @@ class EjercicioDetailView(LoginRequiredMixin, DetailView):
                 workout_ejercicio__workout__usuario=self.request.user
             )
             .select_related('workout_ejercicio__workout')
-            .order_by('-workout_ejercicio__workout__fecha')[:30]
+            .order_by('-workout_ejercicio__workout__fecha')[:20]
         )
         return context
 
@@ -129,6 +130,8 @@ class RutinaDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['ejercicios'] = self.object.ejercicios.select_related('ejercicio').prefetch_related('series')
+        context['form_ejercicio'] = RutinaEjercicioForm()
+        context['form_serie'] = SerieRutinaForm()
         return context
 
     def test_func(self):
@@ -178,6 +181,52 @@ class RutinaDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return self.get_object().usuario == self.request.user or self.request.user.is_staff
 
 
+@login_required
+def rutina_ejercicio_anadir(request, rutina_pk):
+    rutina = get_object_or_404(Rutina, pk=rutina_pk, usuario=request.user)
+    if request.method == 'POST':
+        form = RutinaEjercicioForm(request.POST)
+        if form.is_valid():
+            bloque = form.save(commit=False)
+            bloque.rutina = rutina
+            bloque.orden = rutina.ejercicios.count()
+            bloque.save()
+            messages.success(request, 'Ejercicio añadido a la rutina.')
+        else:
+            messages.error(request, 'Elige un ejercicio válido.')
+    return redirect('rutina_detail', pk=rutina_pk)
+
+
+@login_required
+def rutina_ejercicio_borrar(request, pk):
+    bloque = get_object_or_404(RutinaEjercicio, pk=pk, rutina__usuario=request.user)
+    rutina_pk = bloque.rutina.pk
+    if request.method == 'POST':
+        bloque.delete()
+    return redirect('rutina_detail', pk=rutina_pk)
+
+
+@login_required
+def rutina_serie_crear(request, bloque_pk):
+    bloque = get_object_or_404(RutinaEjercicio, pk=bloque_pk, rutina__usuario=request.user)
+    if request.method == 'POST':
+        form = SerieRutinaForm(request.POST)
+        if form.is_valid():
+            serie = form.save(commit=False)
+            serie.rutina_ejercicio = bloque
+            serie.save()
+    return redirect('rutina_detail', pk=bloque.rutina.pk)
+
+
+@login_required
+def rutina_serie_borrar(request, pk):
+    serie = get_object_or_404(SerieRutina, pk=pk, rutina_ejercicio__rutina__usuario=request.user)
+    rutina_pk = serie.rutina_ejercicio.rutina.pk
+    if request.method == 'POST':
+        serie.delete()
+    return redirect('rutina_detail', pk=rutina_pk)
+
+
 # ── Workouts ──────────────────────────────────────────────────
 
 class WorkoutListView(LoginRequiredMixin, ListView):
@@ -213,10 +262,34 @@ class WorkoutCreateView(LoginRequiredMixin, CreateView):
     form_class = WorkoutForm
     template_name = 'entrenamientos/formulario_workout.html'
 
+    def get_initial(self):
+        initial = super().get_initial()
+        rutina_id = self.request.GET.get('rutina')
+        if rutina_id:
+            initial['rutina'] = rutina_id
+        return initial
+
     def form_valid(self, form):
         form.instance.usuario = self.request.user
+        respuesta = super().form_valid(form)
+        if self.object.rutina:
+            for bloque_rutina in self.object.rutina.ejercicios.all():
+                bloque_workout = WorkoutEjercicio.objects.create(
+                    workout=self.object,
+                    ejercicio=bloque_rutina.ejercicio,
+                    orden=bloque_rutina.orden,
+                    notas=bloque_rutina.notas,
+                )
+                # Genera series vacías según el número definido en la rutina
+                num = bloque_rutina.series.first()
+                cantidad = num.num_series if num else 3
+                for i in range(cantidad):
+                    Serie.objects.create(
+                        workout_ejercicio=bloque_workout,
+                        orden=i,
+                    )
         messages.success(self.request, 'Entrenamiento creado.')
-        return super().form_valid(form)
+        return respuesta
 
     def get_success_url(self):
         return reverse('workout_detail', kwargs={'pk': self.object.pk})
