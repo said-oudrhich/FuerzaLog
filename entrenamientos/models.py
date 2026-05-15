@@ -11,7 +11,6 @@ class GrupoMuscular(models.Model):
 
 
 class Ejercicio(models.Model):
-    """Catálogo de ejercicios. Los globales los crea el admin; el usuario puede crear los suyos."""
     nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True)
     grupo_muscular = models.ForeignKey(GrupoMuscular, on_delete=models.PROTECT)
@@ -25,18 +24,11 @@ class Ejercicio(models.Model):
     def __str__(self):
         return self.nombre
 
-    @property
-    def es_personalizado(self):
-        return self.usuario is not None
-
-
-# ── Rutinas (plantillas) ──────────────────────────────────────
 
 class Rutina(models.Model):
-    """Plantilla de entrenamiento: lista de ejercicios con series objetivo."""
     nombre = models.CharField(max_length=120)
     descripcion = models.TextField(blank=True)
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rutinas')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -44,7 +36,6 @@ class Rutina(models.Model):
 
 
 class RutinaEjercicio(models.Model):
-    """Un ejercicio dentro de una plantilla de rutina, con su orden."""
     rutina = models.ForeignKey(Rutina, on_delete=models.CASCADE, related_name='ejercicios')
     ejercicio = models.ForeignKey(Ejercicio, on_delete=models.PROTECT)
     orden = models.PositiveIntegerField(default=0)
@@ -54,53 +45,35 @@ class RutinaEjercicio(models.Model):
         ordering = ['orden']
 
     def __str__(self):
-        return f"{self.ejercicio.nombre}"
+        return f"{self.ejercicio.nombre} ({self.rutina.nombre})"
 
 
 class SerieRutina(models.Model):
-    """Serie objetivo dentro de un RutinaEjercicio (plantilla)."""
-    TIPOS = [
-        ('normal', 'Normal'),
-        ('calentamiento', 'Calentamiento'),
-        ('fallo', 'Al fallo'),
-    ]
     rutina_ejercicio = models.ForeignKey(RutinaEjercicio, on_delete=models.CASCADE, related_name='series')
-    tipo = models.CharField(max_length=15, choices=TIPOS, default='normal')
-    repeticiones = models.PositiveIntegerField(default=10)
-    peso_kg = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
-    orden = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ['orden']
+    num_series = models.PositiveIntegerField(default=3)
 
     def __str__(self):
-        return f"{self.tipo} — {self.repeticiones} reps"
+        return f"{self.num_series} serie(s)"
 
-
-# ── Workouts (entrenamientos reales) ─────────────────────────
 
 class Workout(models.Model):
-    """Entrenamiento realizado. Puede partir de una rutina o ser libre."""
-    titulo = models.CharField(max_length=120, blank=True)
+    nombre = models.CharField(max_length=120, blank=True)
+    descripcion = models.TextField(blank=True)
     fecha = models.DateField(default=timezone.now)
-    duracion_min = models.PositiveIntegerField(null=True, blank=True)
-    notas = models.TextField(blank=True)
     rutina = models.ForeignKey(
         Rutina, on_delete=models.SET_NULL,
         null=True, blank=True, related_name='workouts'
     )
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workouts')
 
     class Meta:
         ordering = ['-fecha']
 
     def __str__(self):
-        return self.titulo or f"Entrenamiento {self.fecha}"
+        return self.nombre or f"Entrenamiento {self.fecha}"
 
 
 class WorkoutEjercicio(models.Model):
-    """Bloque de un ejercicio dentro de un workout, con su orden."""
     workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='ejercicios')
     ejercicio = models.ForeignKey(Ejercicio, on_delete=models.PROTECT)
     orden = models.PositiveIntegerField(default=0)
@@ -114,16 +87,15 @@ class WorkoutEjercicio(models.Model):
 
 
 class Serie(models.Model):
-    """Serie ejecutada dentro de un WorkoutEjercicio."""
     TIPOS = [
-        ('normal', 'Normal'),
-        ('calentamiento', 'Calentamiento'),
-        ('fallo', 'Al fallo'),
+        ('N', 'Normal'),
+        ('W', 'Calentamiento'),
+        ('F', 'Al fallo'),
     ]
     workout_ejercicio = models.ForeignKey(WorkoutEjercicio, on_delete=models.CASCADE, related_name='series')
-    tipo = models.CharField(max_length=15, choices=TIPOS, default='normal')
+    tipo = models.CharField(max_length=1, choices=TIPOS, default='N')
     peso_kg = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
-    repeticiones = models.PositiveIntegerField()
+    repeticiones = models.PositiveIntegerField(default=0)
     orden = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -131,4 +103,4 @@ class Serie(models.Model):
 
     def __str__(self):
         peso = f"{self.peso_kg}kg x " if self.peso_kg else ""
-        return f"{peso}{self.repeticiones} reps ({self.tipo})"
+        return f"{self.get_tipo_display()}: {peso}{self.repeticiones} reps"

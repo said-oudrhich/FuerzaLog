@@ -1,5 +1,5 @@
 from django import forms
-from .models import Ejercicio, Rutina, Workout, WorkoutEjercicio, Serie
+from .models import Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Workout, WorkoutEjercicio, Serie
 
 
 class EjercicioForm(forms.ModelForm):
@@ -20,19 +20,34 @@ class RutinaForm(forms.ModelForm):
         }
 
 
+class RutinaEjercicioForm(forms.ModelForm):
+    class Meta:
+        model = RutinaEjercicio
+        fields = ['ejercicio', 'notas']
+        widgets = {
+            'notas': forms.TextInput(attrs={'placeholder': 'Notas opcionales'}),
+        }
+
+
+class SerieRutinaForm(forms.ModelForm):
+    class Meta:
+        model = SerieRutina
+        fields = ['num_series']
+
+
 class WorkoutForm(forms.ModelForm):
     class Meta:
         model = Workout
-        fields = ['titulo', 'fecha', 'duracion_min', 'rutina', 'notas']
+        fields = ['nombre', 'fecha', 'rutina', 'descripcion']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
-            'notas': forms.Textarea(attrs={'rows': 3}),
+            'descripcion': forms.Textarea(attrs={'rows': 3}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['rutina'].required = False
-        self.fields['titulo'].required = False
+        self.fields['nombre'].required = False
 
 
 
@@ -49,3 +64,6 @@ class SerieForm(forms.ModelForm):
     class Meta:
         model = Serie
         fields = ['tipo', 'peso_kg', 'repeticiones']
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select form-select-sm'}),
+        }

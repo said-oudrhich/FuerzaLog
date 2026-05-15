@@ -15,11 +15,6 @@ class EjercicioAdmin(admin.ModelAdmin):
     search_fields = ['nombre']
 
 
-class SerieRutinaInline(admin.TabularInline):
-    model = SerieRutina
-    extra = 1
-
-
 class RutinaEjercicioInline(admin.TabularInline):
     model = RutinaEjercicio
     extra = 1
@@ -29,11 +24,6 @@ class RutinaEjercicioInline(admin.TabularInline):
 class RutinaAdmin(admin.ModelAdmin):
     list_display = ['nombre', 'usuario', 'fecha_creacion']
     inlines = [RutinaEjercicioInline]
-
-
-class SerieInline(admin.TabularInline):
-    model = Serie
-    extra = 0
 
 
 class WorkoutEjercicioInline(admin.TabularInline):
