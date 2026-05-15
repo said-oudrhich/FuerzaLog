@@ -66,8 +66,8 @@ python manage.py runserver
 
 ## Tecnologías
 
-- Python 3.13
-- Django 6.x
+- Python 3.x
+- Django 5.x
 - Bootstrap 5
 - SQLite
 
