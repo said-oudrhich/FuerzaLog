@@ -3,4 +3,5 @@ set -e
 
 python manage.py migrate --run-syncdb
 python manage.py collectstatic --noinput
-exec gunicorn fuerzalog.wsgi --bind "0.0.0.0:${PORT:-8000}" --workers 2 --log-file - --access-logfile -
+echo "Arrancando en puerto: ${PORT}"
+exec gunicorn fuerzalog.wsgi --bind "0.0.0.0:${PORT}" --workers 2 --log-file - --access-logfile -
