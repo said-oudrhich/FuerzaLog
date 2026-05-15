@@ -3,6 +3,6 @@ builder = "nixpacks"
 
 [deploy]
 startCommand = "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn fuerzalog.wsgi --bind 0.0.0.0:$PORT --log-file -"
-healthcheckPath = "/"
-healthcheckTimeout = 30
+healthcheckPath = "/accounts/login/"
+healthcheckTimeout = 60
 restartPolicyType = "on_failure"
