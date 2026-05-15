@@ -9,7 +9,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get(
     'ALLOWED_HOSTS',
-    'localhost 127.0.0.1 fuerzalog.saiid.es .up.railway.app'
+    'localhost 127.0.0.1 fuerzalog.saiid.es .up.railway.app healthcheck.railway.app'
 ).split()
 
 INSTALLED_APPS = [
