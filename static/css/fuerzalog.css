@@ -1,80 +1,78 @@
-/* FuerzaLog – estilos propios */
+/* Estilos sencillos para el proyecto */
 
 body {
     background-color: #f8f9fa;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Navbar */
 .navbar-brand {
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-weight: bold;
 }
 
-/* Cards */
-.card {
-    border-radius: 10px;
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-}
-
-.card-header {
-    border-radius: 10px 10px 0 0 !important;
-    background-color: #fff;
-    border-bottom: 1px solid #e9ecef;
-    font-weight: 600;
-}
-
-/* Botones */
-.btn {
-    border-radius: 6px;
-    font-size: 0.875rem;
-}
-
-/* Títulos de página */
-h2 {
-    font-weight: 700;
+h1,
+h2,
+h5 {
     color: #212529;
 }
 
-/* Tabla de series */
-.table th {
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #6c757d;
-}
-
-/* Badges */
-.badge {
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-/* Formularios */
-input.form-control,
-select.form-select,
-textarea.form-control {
+.card,
+.list-group-item,
+.bloque-entreno,
+.caja-vacia {
+    background-color: white;
+    border: 1px solid #dee2e6;
     border-radius: 6px;
-    font-size: 0.9rem;
 }
 
-/* Página de inicio */
-.display-5 {
-    font-weight: 800;
+.bloque-entreno {
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
-/* Footer sutil */
+.caja-vacia {
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.acciones-lista {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+.campo-serie {
+    width: 105px;
+}
+
+.campo-reps {
+    width: 80px;
+}
+
+form input,
+form select,
+form textarea {
+    display: block;
+    width: 100%;
+    padding: .375rem .75rem;
+    border: 1px solid #ced4da;
+    border-radius: .375rem;
+}
+
 footer {
     margin-top: 3rem;
     padding: 1rem 0;
-    font-size: 0.8rem;
-    color: #adb5bd;
     text-align: center;
+    color: #6c757d;
+    font-size: .9rem;
+}
+
+@media (max-width: 576px) {
+    .acciones-lista .btn {
+        width: 100%;
+    }
+
+    .campo-serie,
+    .campo-reps {
+        width: 100%;
+    }
 }

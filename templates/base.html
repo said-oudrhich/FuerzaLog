@@ -1,141 +1,68 @@
-{% load static %}
-<!DOCTYPE html>
+{% load static %}<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}FuerzaLog{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'logo.svg' %}">
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/fuerzalog.css' %}">
-    <style>
-        :root {
-            --fl-dark:  #1e3a5f;
-            --fl-mid:   #2c5282;
-            --fl-light: #3182ce;
-        }
-        body { background-color: #f7fafc; }
-
-        /* Navbar */
-        .navbar { background-color: var(--fl-dark) !important; }
-        .navbar .nav-link { color: rgba(255,255,255,.85) !important; }
-        .navbar .nav-link:hover,
-        .navbar .nav-link.active { color: #fff !important; }
-        .navbar-brand { font-weight: 700; letter-spacing: .5px; }
-
-        /* Botones */
-        .btn-primary  { background-color: var(--fl-mid);   border-color: var(--fl-mid); }
-        .btn-primary:hover  { background-color: var(--fl-dark);  border-color: var(--fl-dark); }
-        .btn-info     { background-color: var(--fl-light);  border-color: var(--fl-light); color: #fff; }
-        .btn-warning  { background-color: #d69e2e; border-color: #d69e2e; }
-        .btn-danger   { background-color: #c53030; border-color: #c53030; }
-
-        /* Cards */
-        .card { border-color: #e2e8f0; }
-
-        /* Dropdown usuario */
-        .navbar .dropdown-menu { min-width: 160px; }
-    </style>
+    <link href="{% static 'css/fuerzalog.css' %}" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
 
-            <!-- Brand -->
-            <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'inicio' %}">
-                <img src="{% static 'logo.svg' %}" height="28" alt="FuerzaLog">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="{% if user.is_authenticated %}{% url 'entrenamiento_list' %}{% else %}{% url 'inicio' %}{% endif %}">
+                <img src="{% static 'logo.svg' %}" alt="Logotipo de FuerzaLog" height="30" class="me-2">
                 FuerzaLog
             </a>
-
-            <!-- Toggler para móvil -->
-            <button class="navbar-toggler" type="button"
-                    data-bs-toggle="collapse" data-bs-target="#navbarMain"
-                    aria-controls="navbarMain" aria-expanded="false" aria-label="Menú">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
-            <div class="collapse navbar-collapse" id="navbarMain">
-
-                {% if user.is_authenticated %}
-
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'workout_list' %}">Entrenamientos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'ejercicio_list' %}">Ejercicios</a>
+                            <a class="nav-link" href="{% url 'entrenamiento_list' %}">Entrenamientos</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'rutina_list' %}">Rutinas</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'workout_create' %}">Nuevo entrenamiento</a>
-                        </li>
-                    </ul>
-
-                    <form class="d-flex me-3" action="{% url 'ejercicio_list' %}" method="get">
-                        <input class="form-control form-control-sm me-2" type="search" name="q"
-                               placeholder="Buscar ejercicio..." style="min-width:180px;"
-                               value="{{ request.GET.q }}">
-                        <button class="btn btn-outline-light btn-sm" type="submit">Buscar</button>
-                    </form>
-
-                    <!-- Dropdown usuario -->
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#"
-                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor"
-                                     viewBox="0 0 16 16">
-                                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.029 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664h10z"/>
-                                </svg>
-                                {{ user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                {% if user.is_staff %}
-                                    <li><a class="dropdown-item" href="{% url 'admin:index' %}">Panel Admin</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                {% endif %}
-                                <li>
-                                    <form method="post" action="{% url 'logout' %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item text-danger">Cerrar sesión</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    </ul>
-
-                {% else %}
-
-                    <!-- Visitante -->
-                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a>
+                            <a class="nav-link" href="{% url 'ejercicio_list' %}">Ejercicios</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'registro' %}">Registro</a>
+                            <a class="btn btn-primary btn-sm mt-1 ms-lg-2" href="{% url 'entrenamiento_create' %}">Nuevo</a>
                         </li>
-                    </ul>
-
-                {% endif %}
-
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-secondary btn-sm mt-1 ms-lg-2">Salir</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Entrar</a></li>
+                        <li class="nav-item"><a class="btn btn-primary btn-sm mt-1 ms-lg-2" href="{% url 'registro' %}">Registro</a></li>
+                    {% endif %}
+                </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         {% endif %}
         {% block content %}{% endblock %}
     </div>
-
+    <footer>
+        Proyecto Django - 2 DAW
+    </footer>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

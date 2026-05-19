@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Mis entrenamientos{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h2 class="mb-0">Mis entrenamientos</h2>
+        <p class="text-muted mb-0">Historial ordenado por fecha.</p>
+    </div>
+    <a href="{% url 'entrenamiento_create' %}" class="btn btn-primary">Nuevo entrenamiento</a>
+</div>
+
+{% if entrenamientos %}
+    <div class="list-group lista-simple">
+        {% for w in entrenamientos %}
+            <div class="list-group-item">
+                <div class="d-flex flex-wrap justify-content-between gap-3">
+                    <div>
+                        <h5 class="mb-1">{{ w.nombre|default:"Entrenamiento" }}</h5>
+                        <p class="mb-1 text-muted">
+                            {{ w.fecha|date:"d/m/Y" }} · Ejercicios: {{ w.ejercicios.count }}
+                            {% if w.rutina %} · {{ w.rutina }}{% endif %}
+                        </p>
+                    </div>
+                    <div class="acciones-lista">
+                        <a href="{% url 'entrenamiento_detail' w.pk %}" class="btn btn-primary btn-sm">Abrir</a>
+                        <a href="{% url 'entrenamiento_update' w.pk %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+                        <a href="{% url 'entrenamiento_delete' w.pk %}" class="btn btn-outline-danger btn-sm">Eliminar</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="caja-vacia">
+        <h5>No hay entrenamientos todavía</h5>
+        <p class="text-muted">Crea uno y añade ejercicios con sus series, peso y repeticiones.</p>
+        <a href="{% url 'entrenamiento_create' %}" class="btn btn-primary">Crear mi primer entrenamiento</a>
+    </div>
+{% endif %}
+{% endblock %}

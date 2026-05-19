@@ -10,9 +10,9 @@
         {% if rutina.descripcion %}<p>{{ rutina.descripcion }}</p>{% endif %}
     </div>
     {% if rutina.usuario == request.user or request.user.is_staff %}
-        <div class="d-flex gap-2">
-            <a href="{% url 'rutina_update' rutina.pk %}" class="btn btn-warning btn-sm">Editar</a>
-            <a href="{% url 'rutina_delete' rutina.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+        <div class="acciones-lista">
+            <a href="{% url 'rutina_update' rutina.pk %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+            <a href="{% url 'rutina_delete' rutina.pk %}" class="btn btn-outline-danger btn-sm">Eliminar</a>
         </div>
     {% endif %}
 </div>
@@ -22,7 +22,7 @@
 <h5>Ejercicios de la rutina</h5>
 
 {% for bloque in ejercicios %}
-    <div class="border rounded p-3 mb-3 bg-white">
+    <div class="bloque-entreno">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div>
                 <strong>{{ bloque.ejercicio.nombre }}</strong>
@@ -37,7 +37,7 @@
 
         {% if bloque.series.first %}
             <p class="small text-muted mb-1">
-                {{ bloque.series.first.num_series }} serie(s) planificadas
+                Series planificadas: {{ bloque.series.first.num_series }}
                 <form method="post" action="{% url 'rutina_serie_borrar' bloque.series.first.pk %}" class="d-inline">
                     {% csrf_token %}
                     <button class="btn btn-link btn-sm text-danger p-0">Quitar</button>
@@ -50,7 +50,7 @@
                     <label class="col-form-label col-form-label-sm">Número de series:</label>
                 </div>
                 <div class="col-auto">
-                    <input type="number" name="num_series" class="form-control form-control-sm" value="3" min="1" max="10" style="width:70px">
+                    <input type="number" name="num_series" class="form-control form-control-sm campo-reps" value="3" min="1" max="10">
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-outline-secondary btn-sm">Guardar</button>
@@ -59,7 +59,10 @@
         {% endif %}
     </div>
 {% empty %}
-    <p class="text-muted">Todavía no hay ejercicios en esta rutina.</p>
+    <div class="caja-vacia">
+        <h5>Rutina vacía</h5>
+        <p class="text-muted mb-0">Añade ejercicios para usarla como plantilla de entrenamiento.</p>
+    </div>
 {% endfor %}
 
 <hr>
@@ -79,6 +82,6 @@
 
 <div class="mt-4">
     <a href="{% url 'rutina_list' %}" class="btn btn-secondary btn-sm">← Volver</a>
-    <a href="{% url 'workout_create' %}?rutina={{ rutina.pk }}" class="btn btn-primary btn-sm">Usar esta rutina</a>
+    <a href="{% url 'entrenamiento_create' %}?rutina={{ rutina.pk }}" class="btn btn-primary btn-sm">Usar esta rutina</a>
 </div>
 {% endblock %}

@@ -3,28 +3,35 @@
 {% block title %}Mis Rutinas{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>Mis Rutinas</h2>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h2 class="mb-0">Mis rutinas</h2>
+        <p class="text-muted mb-0">Plantillas para empezar entrenamientos más rápido.</p>
+    </div>
     <a href="{% url 'rutina_create' %}" class="btn btn-primary">Nueva rutina</a>
 </div>
 
 {% for rutina in rutinas %}
-    <div class="list-group mb-2">
+    <div class="list-group lista-simple mb-2">
         <div class="list-group-item d-flex justify-content-between align-items-center">
             <div>
                 <h5 class="mb-1">{{ rutina.nombre }}</h5>
                 <p class="text-muted small mb-0">{{ rutina.descripcion|truncatechars:80 }}</p>
-                <p class="text-muted small mb-0">{{ rutina.ejercicios.count }} ejercicio(s)</p>
+                <p class="text-muted small mb-0">Ejercicios: {{ rutina.ejercicios.count }}</p>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{% url 'rutina_detail' rutina.pk %}" class="btn btn-info btn-sm">Ver</a>
-                <a href="{% url 'workout_create' %}?rutina={{ rutina.pk }}" class="btn btn-primary btn-sm">Usar</a>
-                <a href="{% url 'rutina_update' rutina.pk %}" class="btn btn-warning btn-sm">Editar</a>
-                <a href="{% url 'rutina_delete' rutina.pk %}" class="btn btn-danger btn-sm">Eliminar</a>
+            <div class="acciones-lista">
+                <a href="{% url 'rutina_detail' rutina.pk %}" class="btn btn-primary btn-sm">Abrir</a>
+                <a href="{% url 'entrenamiento_create' %}?rutina={{ rutina.pk }}" class="btn btn-primary btn-sm">Usar</a>
+                <a href="{% url 'rutina_update' rutina.pk %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+                <a href="{% url 'rutina_delete' rutina.pk %}" class="btn btn-outline-danger btn-sm">Eliminar</a>
             </div>
         </div>
     </div>
 {% empty %}
-    <p class="text-muted">No tienes rutinas. <a href="{% url 'rutina_create' %}">Crea una</a>.</p>
+    <div class="caja-vacia">
+        <h5>No tienes rutinas</h5>
+        <p class="text-muted">Puedes crear una plantilla con ejercicios para repetirla cada semana.</p>
+        <a href="{% url 'rutina_create' %}" class="btn btn-primary">Crear rutina</a>
+    </div>
 {% endfor %}
 {% endblock %}

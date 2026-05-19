@@ -27,13 +27,13 @@
                 <th>Fecha</th>
                 <th>Tipo</th>
                 <th>Peso (kg)</th>
-                <th>Reps</th>
+                <th>Repeticiones</th>
             </tr>
         </thead>
         <tbody>
             {% for s in historial %}
                 <tr>
-                    <td><a href="{% url 'workout_detail' s.workout_ejercicio.workout.pk %}">{{ s.workout_ejercicio.workout.fecha|date:"d/m/Y" }}</a></td>
+                    <td><a href="{% url 'entrenamiento_detail' s.entrenamiento_ejercicio.entrenamiento.pk %}">{{ s.entrenamiento_ejercicio.entrenamiento.fecha|date:"d/m/Y" }}</a></td>
                     <td>{{ s.get_tipo_display }}</td>
                     <td>{{ s.peso_kg|default:"—" }}</td>
                     <td>{{ s.repeticiones }}</td>
