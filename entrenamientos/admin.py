@@ -1,38 +1,12 @@
 from django.contrib import admin
-from .models import GrupoMuscular, Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Workout, WorkoutEjercicio, Serie
+from .models import GrupoMuscular, Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Entrenamiento, EntrenamientoEjercicio, Serie
 
 
-@admin.register(GrupoMuscular)
-class GrupoMuscularAdmin(admin.ModelAdmin):
-    list_display = ['nombre']
-    ordering = ['nombre']
-
-
-@admin.register(Ejercicio)
-class EjercicioAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'grupo_muscular', 'usuario']
-    list_filter = ['grupo_muscular']
-    search_fields = ['nombre']
-
-
-class RutinaEjercicioInline(admin.TabularInline):
-    model = RutinaEjercicio
-    extra = 1
-
-
-@admin.register(Rutina)
-class RutinaAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'usuario', 'fecha_creacion']
-    inlines = [RutinaEjercicioInline]
-
-
-class WorkoutEjercicioInline(admin.TabularInline):
-    model = WorkoutEjercicio
-    extra = 0
-
-
-@admin.register(Workout)
-class WorkoutAdmin(admin.ModelAdmin):
-    list_display = ['__str__', 'fecha', 'usuario', 'rutina']
-    list_filter = ['usuario']
-    inlines = [WorkoutEjercicioInline]
+admin.site.register(GrupoMuscular)
+admin.site.register(Ejercicio)
+admin.site.register(Rutina)
+admin.site.register(RutinaEjercicio)
+admin.site.register(SerieRutina)
+admin.site.register(Entrenamiento)
+admin.site.register(EntrenamientoEjercicio)
+admin.site.register(Serie)

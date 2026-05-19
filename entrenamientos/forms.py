@@ -1,5 +1,6 @@
 from django import forms
-from .models import Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Workout, WorkoutEjercicio, Serie
+from django.db.models import Q
+from .models import Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Entrenamiento, EntrenamientoEjercicio, Serie
 
 
 class EjercicioForm(forms.ModelForm):
@@ -28,6 +29,14 @@ class RutinaEjercicioForm(forms.ModelForm):
             'notas': forms.TextInput(attrs={'placeholder': 'Notas opcionales'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['ejercicio'].queryset = Ejercicio.objects.filter(
+                Q(usuario=user) | Q(usuario__isnull=True)
+            )
+
 
 class SerieRutinaForm(forms.ModelForm):
     class Meta:
@@ -35,9 +44,9 @@ class SerieRutinaForm(forms.ModelForm):
         fields = ['num_series']
 
 
-class WorkoutForm(forms.ModelForm):
+class EntrenamientoForm(forms.ModelForm):
     class Meta:
-        model = Workout
+        model = Entrenamiento
         fields = ['nombre', 'fecha', 'rutina', 'descripcion']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date'}),
@@ -45,19 +54,29 @@ class WorkoutForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         self.fields['rutina'].required = False
         self.fields['nombre'].required = False
+        if user is not None:
+            self.fields['rutina'].queryset = Rutina.objects.filter(usuario=user)
 
 
-
-class WorkoutEjercicioForm(forms.ModelForm):
+class EntrenamientoEjercicioForm(forms.ModelForm):
     class Meta:
-        model = WorkoutEjercicio
+        model = EntrenamientoEjercicio
         fields = ['ejercicio', 'notas']
         widgets = {
             'notas': forms.TextInput(attrs={'placeholder': 'Notas opcionales'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user is not None:
+            self.fields['ejercicio'].queryset = Ejercicio.objects.filter(
+                Q(usuario=user) | Q(usuario__isnull=True)
+            )
 
 
 class SerieForm(forms.ModelForm):

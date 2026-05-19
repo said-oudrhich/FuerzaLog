@@ -56,15 +56,15 @@ class SerieRutina(models.Model):
         return f"{self.num_series} serie(s)"
 
 
-class Workout(models.Model):
+class Entrenamiento(models.Model):
     nombre = models.CharField(max_length=120, blank=True)
     descripcion = models.TextField(blank=True)
     fecha = models.DateField(default=timezone.now)
     rutina = models.ForeignKey(
         Rutina, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='workouts'
+        null=True, blank=True, related_name='entrenamientos'
     )
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workouts')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='entrenamientos')
 
     class Meta:
         ordering = ['-fecha']
@@ -73,8 +73,8 @@ class Workout(models.Model):
         return self.nombre or f"Entrenamiento {self.fecha}"
 
 
-class WorkoutEjercicio(models.Model):
-    workout = models.ForeignKey(Workout, on_delete=models.CASCADE, related_name='ejercicios')
+class EntrenamientoEjercicio(models.Model):
+    entrenamiento = models.ForeignKey(Entrenamiento, on_delete=models.CASCADE, related_name='ejercicios')
     ejercicio = models.ForeignKey(Ejercicio, on_delete=models.PROTECT)
     orden = models.PositiveIntegerField(default=0)
     notas = models.CharField(max_length=200, blank=True)
@@ -92,7 +92,7 @@ class Serie(models.Model):
         ('W', 'Calentamiento'),
         ('F', 'Al fallo'),
     ]
-    workout_ejercicio = models.ForeignKey(WorkoutEjercicio, on_delete=models.CASCADE, related_name='series')
+    entrenamiento_ejercicio = models.ForeignKey(EntrenamientoEjercicio, on_delete=models.CASCADE, related_name='series')
     tipo = models.CharField(max_length=1, choices=TIPOS, default='N')
     peso_kg = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
     repeticiones = models.PositiveIntegerField(default=0)
@@ -103,4 +103,4 @@ class Serie(models.Model):
 
     def __str__(self):
         peso = f"{self.peso_kg}kg x " if self.peso_kg else ""
-        return f"{self.get_tipo_display()}: {peso}{self.repeticiones} reps"
+        return f"{self.get_tipo_display()}: {peso}{self.repeticiones} repeticiones"

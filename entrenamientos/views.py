@@ -8,9 +8,8 @@ from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 
-from .models import Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Workout, WorkoutEjercicio, Serie
-from .forms import EjercicioForm, RutinaForm, RutinaEjercicioForm, SerieRutinaForm, WorkoutForm, WorkoutEjercicioForm, SerieForm
-
+from .models import Ejercicio, Rutina, RutinaEjercicio, SerieRutina, Entrenamiento, EntrenamientoEjercicio, Serie
+from .forms import EjercicioForm, RutinaForm, RutinaEjercicioForm, SerieRutinaForm, EntrenamientoForm, EntrenamientoEjercicioForm, SerieForm
 
 
 def inicio(request):
@@ -24,13 +23,12 @@ def registro(request):
             user = form.save()
             login(request, user)
             messages.success(request, 'Cuenta creada.')
-            return redirect('workout_list')
+            return redirect('entrenamiento_list')
     else:
         form = UserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
-
-# ── Ejercicios ────────────────────────────────────────────────
+# Ejercicios
 
 class EjercicioListView(LoginRequiredMixin, ListView):
     model = Ejercicio
@@ -38,9 +36,10 @@ class EjercicioListView(LoginRequiredMixin, ListView):
     context_object_name = 'ejercicios'
 
     def get_queryset(self):
+        # Asi se mezclan los ejercicios comunes con los del usuario, sin enseñar los de otra persona.
         qs = Ejercicio.objects.filter(
             Q(usuario=self.request.user) | Q(usuario__isnull=True)
-        ).select_related('grupo_muscular')
+        )
         q = self.request.GET.get('q', '')
         if q:
             qs = qs.filter(nombre__icontains=q)
@@ -58,15 +57,10 @@ class EjercicioDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['historial'] = (
-            Serie.objects
-            .filter(
-                workout_ejercicio__ejercicio=self.object,
-                workout_ejercicio__workout__usuario=self.request.user
-            )
-            .select_related('workout_ejercicio__workout')
-            .order_by('-workout_ejercicio__workout__fecha')[:20]
-        )
+        context['historial'] = Serie.objects.filter(
+            entrenamiento_ejercicio__ejercicio=self.object,
+            entrenamiento_ejercicio__entrenamiento__usuario=self.request.user
+        ).order_by('-entrenamiento_ejercicio__entrenamiento__fecha')[:20]
         return context
 
 
@@ -93,8 +87,12 @@ class EjercicioUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return super().form_valid(form)
 
     def test_func(self):
-        obj = self.get_object()
-        return obj.usuario == self.request.user or self.request.user.is_staff
+        ejercicio = self.get_object()
+        return ejercicio.usuario == self.request.user or self.request.user.is_staff
+
+    def handle_no_permission(self):
+        messages.error(self.request, 'No puedes modificar este elemento.')
+        return redirect('ejercicio_list')
 
 
 class EjercicioDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -108,11 +106,14 @@ class EjercicioDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return super().form_valid(form)
 
     def test_func(self):
-        obj = self.get_object()
-        return obj.usuario == self.request.user or self.request.user.is_staff
+        ejercicio = self.get_object()
+        return ejercicio.usuario == self.request.user or self.request.user.is_staff
 
+    def handle_no_permission(self):
+        messages.error(self.request, 'No puedes modificar este elemento.')
+        return redirect('ejercicio_list')
 
-# ── Rutinas ───────────────────────────────────────────────────
+# Rutinas
 
 class RutinaListView(LoginRequiredMixin, ListView):
     model = Rutina
@@ -129,20 +130,20 @@ class RutinaDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['ejercicios'] = self.object.ejercicios.select_related('ejercicio').prefetch_related('series')
-        context['form_ejercicio'] = RutinaEjercicioForm()
+        context['ejercicios'] = self.object.ejercicios.all()
+        context['form_ejercicio'] = RutinaEjercicioForm(user=self.request.user)
         context['form_serie'] = SerieRutinaForm()
         return context
 
     def test_func(self):
-        return self.get_object().usuario == self.request.user or self.request.user.is_staff
+        rutina = self.get_object()
+        return rutina.usuario == self.request.user or self.request.user.is_staff
 
 
 class RutinaCreateView(LoginRequiredMixin, CreateView):
     model = Rutina
     form_class = RutinaForm
     template_name = 'entrenamientos/formulario_rutina.html'
-    success_url = reverse_lazy('rutina_list')
 
     def form_valid(self, form):
         form.instance.usuario = self.request.user
@@ -164,7 +165,12 @@ class RutinaUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return super().form_valid(form)
 
     def test_func(self):
-        return self.get_object().usuario == self.request.user or self.request.user.is_staff
+        rutina = self.get_object()
+        return rutina.usuario == self.request.user or self.request.user.is_staff
+
+    def handle_no_permission(self):
+        messages.error(self.request, 'No puedes modificar este elemento.')
+        return redirect('rutina_list')
 
 
 class RutinaDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
@@ -178,14 +184,19 @@ class RutinaDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return super().form_valid(form)
 
     def test_func(self):
-        return self.get_object().usuario == self.request.user or self.request.user.is_staff
+        rutina = self.get_object()
+        return rutina.usuario == self.request.user or self.request.user.is_staff
+
+    def handle_no_permission(self):
+        messages.error(self.request, 'No puedes modificar este elemento.')
+        return redirect('rutina_list')
 
 
 @login_required
 def rutina_ejercicio_anadir(request, rutina_pk):
     rutina = get_object_or_404(Rutina, pk=rutina_pk, usuario=request.user)
     if request.method == 'POST':
-        form = RutinaEjercicioForm(request.POST)
+        form = RutinaEjercicioForm(request.POST, user=request.user)
         if form.is_valid():
             bloque = form.save(commit=False)
             bloque.rutina = rutina
@@ -226,47 +237,48 @@ def rutina_serie_borrar(request, pk):
         serie.delete()
     return redirect('rutina_detail', pk=rutina_pk)
 
+# Entrenamientos
 
-# ── Workouts ──────────────────────────────────────────────────
-
-class WorkoutListView(LoginRequiredMixin, ListView):
-    model = Workout
-    template_name = 'entrenamientos/lista_workouts.html'
-    context_object_name = 'workouts'
+class EntrenamientoListView(LoginRequiredMixin, ListView):
+    model = Entrenamiento
+    template_name = 'entrenamientos/lista_entrenamientos.html'
+    context_object_name = 'entrenamientos'
 
     def get_queryset(self):
-        return Workout.objects.filter(usuario=self.request.user).select_related('rutina')
+        return Entrenamiento.objects.filter(usuario=self.request.user)
 
 
-class WorkoutDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
-    model = Workout
-    template_name = 'entrenamientos/detalle_workout.html'
+class EntrenamientoDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Entrenamiento
+    template_name = 'entrenamientos/detalle_entrenamiento.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['bloques'] = (
-            self.object.ejercicios
-            .select_related('ejercicio__grupo_muscular')
-            .prefetch_related('series')
-        )
-        context['form_ejercicio'] = WorkoutEjercicioForm()
+        context['bloques'] = self.object.ejercicios.all()
+        context['form_ejercicio'] = EntrenamientoEjercicioForm(user=self.request.user)
         context['form_serie'] = SerieForm()
         return context
 
     def test_func(self):
-        return self.get_object().usuario == self.request.user or self.request.user.is_staff
+        entrenamiento = self.get_object()
+        return entrenamiento.usuario == self.request.user or self.request.user.is_staff
 
 
-class WorkoutCreateView(LoginRequiredMixin, CreateView):
-    model = Workout
-    form_class = WorkoutForm
-    template_name = 'entrenamientos/formulario_workout.html'
+class EntrenamientoCreateView(LoginRequiredMixin, CreateView):
+    model = Entrenamiento
+    form_class = EntrenamientoForm
+    template_name = 'entrenamientos/formulario_entrenamiento.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def get_initial(self):
         initial = super().get_initial()
-        rutina_id = self.request.GET.get('rutina')
-        if rutina_id:
-            initial['rutina'] = rutina_id
+        rutina_pk = self.request.GET.get('rutina')
+        if rutina_pk:
+            initial['rutina'] = get_object_or_404(Rutina, pk=rutina_pk, usuario=self.request.user)
         return initial
 
     def form_valid(self, form):
@@ -274,100 +286,112 @@ class WorkoutCreateView(LoginRequiredMixin, CreateView):
         respuesta = super().form_valid(form)
         if self.object.rutina:
             for bloque_rutina in self.object.rutina.ejercicios.all():
-                bloque_workout = WorkoutEjercicio.objects.create(
-                    workout=self.object,
+                bloque_entrenamiento = EntrenamientoEjercicio.objects.create(
+                    entrenamiento=self.object,
                     ejercicio=bloque_rutina.ejercicio,
                     orden=bloque_rutina.orden,
                     notas=bloque_rutina.notas,
                 )
-                # Genera series vacías según el número definido en la rutina
                 num = bloque_rutina.series.first()
                 cantidad = num.num_series if num else 3
                 for i in range(cantidad):
                     Serie.objects.create(
-                        workout_ejercicio=bloque_workout,
+                        entrenamiento_ejercicio=bloque_entrenamiento,
                         orden=i,
                     )
         messages.success(self.request, 'Entrenamiento creado.')
         return respuesta
 
     def get_success_url(self):
-        return reverse('workout_detail', kwargs={'pk': self.object.pk})
+        return reverse('entrenamiento_detail', kwargs={'pk': self.object.pk})
 
 
-class WorkoutUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Workout
-    form_class = WorkoutForm
-    template_name = 'entrenamientos/formulario_workout.html'
-    success_url = reverse_lazy('workout_list')
+class EntrenamientoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Entrenamiento
+    form_class = EntrenamientoForm
+    template_name = 'entrenamientos/formulario_entrenamiento.html'
+    success_url = reverse_lazy('entrenamiento_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def form_valid(self, form):
         messages.success(self.request, 'Entrenamiento actualizado.')
         return super().form_valid(form)
 
     def test_func(self):
-        return self.get_object().usuario == self.request.user or self.request.user.is_staff
+        entrenamiento = self.get_object()
+        return entrenamiento.usuario == self.request.user or self.request.user.is_staff
+
+    def handle_no_permission(self):
+        messages.error(self.request, 'No puedes modificar este elemento.')
+        return redirect('entrenamiento_list')
 
 
-class WorkoutDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Workout
+class EntrenamientoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Entrenamiento
     template_name = 'entrenamientos/confirmar_eliminacion.html'
     context_object_name = 'objeto'
-    success_url = reverse_lazy('workout_list')
+    success_url = reverse_lazy('entrenamiento_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Entrenamiento eliminado.')
         return super().form_valid(form)
 
     def test_func(self):
-        return self.get_object().usuario == self.request.user or self.request.user.is_staff
+        entrenamiento = self.get_object()
+        return entrenamiento.usuario == self.request.user or self.request.user.is_staff
 
+    def handle_no_permission(self):
+        messages.error(self.request, 'No puedes modificar este elemento.')
+        return redirect('entrenamiento_list')
 
-# ── Series dentro de un bloque ───────────────────────────────
+# Series dentro de un bloque
 
 @login_required
-def ejercicio_anadir(request, workout_pk):
-    workout = get_object_or_404(Workout, pk=workout_pk, usuario=request.user)
+def ejercicio_anadir(request, entrenamiento_pk):
+    entrenamiento = get_object_or_404(Entrenamiento, pk=entrenamiento_pk, usuario=request.user)
     if request.method == 'POST':
-        form = WorkoutEjercicioForm(request.POST)
+        form = EntrenamientoEjercicioForm(request.POST, user=request.user)
         if form.is_valid():
             bloque = form.save(commit=False)
-            bloque.workout = workout
-            bloque.orden = workout.ejercicios.count()
+            bloque.entrenamiento = entrenamiento
+            bloque.orden = entrenamiento.ejercicios.count()
             bloque.save()
             messages.success(request, 'Ejercicio añadido.')
         else:
             messages.error(request, 'Elige un ejercicio válido.')
-    return redirect('workout_detail', pk=workout_pk)
+    return redirect('entrenamiento_detail', pk=entrenamiento_pk)
 
 
 @login_required
 def serie_crear(request, bloque_pk):
-    bloque = get_object_or_404(WorkoutEjercicio, pk=bloque_pk, workout__usuario=request.user)
+    bloque = get_object_or_404(EntrenamientoEjercicio, pk=bloque_pk, entrenamiento__usuario=request.user)
     if request.method == 'POST':
         form = SerieForm(request.POST)
         if form.is_valid():
             serie = form.save(commit=False)
-            serie.workout_ejercicio = bloque
+            serie.entrenamiento_ejercicio = bloque
             serie.orden = bloque.series.count()
             serie.save()
-    return redirect('workout_detail', pk=bloque.workout.pk)
+    return redirect('entrenamiento_detail', pk=bloque.entrenamiento.pk)
 
 
 @login_required
 def serie_borrar(request, pk):
-    serie = get_object_or_404(Serie, pk=pk, workout_ejercicio__workout__usuario=request.user)
-    workout_pk = serie.workout_ejercicio.workout.pk
+    serie = get_object_or_404(Serie, pk=pk, entrenamiento_ejercicio__entrenamiento__usuario=request.user)
+    entrenamiento_pk = serie.entrenamiento_ejercicio.entrenamiento.pk
     if request.method == 'POST':
         serie.delete()
-    return redirect('workout_detail', pk=workout_pk)
+    return redirect('entrenamiento_detail', pk=entrenamiento_pk)
 
 
 @login_required
 def bloque_borrar(request, pk):
-    bloque = get_object_or_404(WorkoutEjercicio, pk=pk, workout__usuario=request.user)
-    workout_pk = bloque.workout.pk
+    bloque = get_object_or_404(EntrenamientoEjercicio, pk=pk, entrenamiento__usuario=request.user)
+    entrenamiento_pk = bloque.entrenamiento.pk
     if request.method == 'POST':
         bloque.delete()
-    return redirect('workout_detail', pk=workout_pk)
-
+    return redirect('entrenamiento_detail', pk=entrenamiento_pk)
