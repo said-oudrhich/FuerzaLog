@@ -1,6 +1,6 @@
 # FuerzaLog
 
-Aplicación web Django para registrar entrenamientos de gimnasio al estilo de la app Hevy. Permite crear workouts, añadir ejercicios con series individuales (peso, repeticiones y tipo), gestionar rutinas de entrenamiento y consultar el historial de cada ejercicio.
+Aplicación web Django para registrar entrenamientos de gimnasio. Permite crear entrenamientos, añadir ejercicios con series (peso, repeticiones y tipo), gestionar rutinas y consultar el historial de cada ejercicio.
 
 ## Características
 
@@ -9,19 +9,20 @@ Aplicación web Django para registrar entrenamientos de gimnasio al estilo de la
 - Ejercicios personalizados por usuario
 - Búsqueda de ejercicios por nombre
 - Rutinas con ejercicios y series objetivo (plantilla)
-- Workouts reales con ejercicios y series individuales (peso, reps, tipo)
+- Entrenamientos con ejercicios y series (peso, repeticiones y tipo)
 - Historial de series por ejercicio
+- Subida de imágenes
 - Protección de datos: cada usuario solo ve y edita lo suyo
-- Diseño responsive con Bootstrap 5
+- Diseño adaptable con Bootstrap 5
 
 ## Modelo de datos
 
 ```
 GrupoMuscular
-Ejercicio  (global si usuario=null, personal si usuario=<user>)
+Ejercicio  (global si admin, personal por usuario)
 
 Rutina ── RutinaEjercicio ── SerieRutina   (plantilla)
-Workout ── WorkoutEjercicio ── Serie        (registro real)
+Entrenamiento ── EntrenamientoEjercicio ── Serie  (entreno real)
 ```
 
 ## Instalación
@@ -40,10 +41,9 @@ source .venv/bin/activate   # Linux/Mac
 pip install -r requirements.txt
 ```
 
-3. Aplicar migraciones y cargar datos iniciales:
+3. Aplicar migraciones:
 ```bash
 python manage.py migrate
-python manage.py loaddata entrenamientos/fixtures/datos_iniciales.json
 ```
 
 4. Crear superusuario:
@@ -59,10 +59,10 @@ python manage.py runserver
 ## Uso rápido
 
 1. Regístrate o inicia sesión
-2. Crea un **Workout** desde el botón "+ Workout" del navbar
-3. Dentro del workout, añade ejercicios del catálogo
+2. Crea un **entrenamiento** desde el menú superior
+3. Dentro del entrenamiento, añade ejercicios del catálogo
 4. Para cada ejercicio añade series indicando tipo, peso y repeticiones
-5. Consulta el historial de cualquier ejercicio en **Ejercicios → Ver historial**
+5. Consulta el historial de cualquier ejercicio en **Ejercicios > Ver historial**
 
 ## Tecnologías
 
@@ -70,11 +70,3 @@ python manage.py runserver
 - Django 5.x
 - Bootstrap 5
 - SQLite
-
-## Despliegue
-
-PythonAnywhere: https://said-oudrhich.pythonanywhere.com
-
-## Autor
-
-Said Oudrhich
