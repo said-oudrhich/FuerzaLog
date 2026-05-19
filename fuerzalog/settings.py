@@ -12,9 +12,9 @@ DEBUG = os.environ.get('DEBUG', 'True').strip().lower() == 'true'
 
 ALLOWED_HOSTS = [
     host.strip().strip('"').strip("'")
-    for host in os.environ.get(
-        'ALLOWED_HOSTS',
-        'localhost,127.0.0.1,.railway.app'
+    for host in (
+        os.environ.get('ALLOWED_HOSTS', '') +
+        ',localhost,127.0.0.1,.railway.app,.up.railway.app'
     ).split(',')
     if host.strip()
 ]
@@ -24,6 +24,7 @@ CSRF_TRUSTED_ORIGINS = [
     for host in ALLOWED_HOSTS
     if host not in ['localhost', '127.0.0.1'] and not host.startswith('.')
 ]
+CSRF_TRUSTED_ORIGINS += ['https://*.railway.app', 'https://*.up.railway.app']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -85,6 +86,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
