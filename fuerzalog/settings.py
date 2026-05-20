@@ -14,7 +14,7 @@ ALLOWED_HOSTS = [
     host.strip().strip('"').strip("'")
     for host in (
         os.environ.get('ALLOWED_HOSTS', '') +
-        ',localhost,127.0.0.1,.railway.app,.up.railway.app'
+        ',localhost,127.0.0.1,.railway.app,.up.railway.app,.pythonanywhere.com,saiid14.pythonanywhere.com'
     ).split(',')
     if host.strip()
 ]
@@ -25,6 +25,7 @@ CSRF_TRUSTED_ORIGINS = [
     if host not in ['localhost', '127.0.0.1'] and not host.startswith('.')
 ]
 CSRF_TRUSTED_ORIGINS += ['https://*.railway.app', 'https://*.up.railway.app']
+CSRF_TRUSTED_ORIGINS += ['https://*.pythonanywhere.com', 'https://saiid14.pythonanywhere.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
